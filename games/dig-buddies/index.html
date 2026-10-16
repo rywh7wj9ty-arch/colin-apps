@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Dig Buddies</title>
+<meta name="theme-color" content="#8fd3ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dig Buddies">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="manifest" href="manifest.webmanifest?v=__V__">
+<link rel="stylesheet" href="style.css?v=__V__">
+<script>
+  // boot guard: any error before the game is up shows a tap-to-reload card instead of a stuck loader
+  window.__V = '__V__';
+  window.__bootFail = function (msg) {
+    var l = document.getElementById('loading'); if (l) l.style.display = 'none';
+    var e = document.getElementById('booterr'); if (!e) return; e.style.display = 'flex';
+    document.getElementById('booterrmsg').textContent = String(msg || 'Unknown error').slice(0, 300);
+  };
+  window.addEventListener('error', function (ev) { if (!window.__booted) window.__bootFail(ev.message || ev.error); });
+  window.addEventListener('unhandledrejection', function (ev) { if (!window.__booted) window.__bootFail(ev.reason && (ev.reason.message || ev.reason)); });
+  setTimeout(function () { if (!window.__booted) window.__bootFail('The game took too long to start.'); }, 15000);
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="loading"><div class="mole-spin"><div class="ms-body"></div><div class="ms-nose"></div></div><p>Digging in&hellip;</p></div>
+<div id="booterr" onclick="location.reload()"><div class="card"><h2>Oops, a hiccup!</h2><p id="booterrmsg"></p><button>Tap to reload</button></div></div>
+
+<div id="ui">
+  <section id="title" class="screen">
+    <div class="titletop"><h1 class="logo"><span>D</span><span>i</span><span>g</span> <span>B</span><span>u</span><span>d</span><span>d</span><span>i</span><span>e</span><span>s</span></h1><p class="tag">A cosy digging puzzle with Pip the mole</p></div>
+    
+    <div class="title-btns">
+      <button class="big green" data-go="map">Adventure</button>
+      <div class="row"><button class="mid blue" data-go="classic">Classic</button><button class="mid sun" data-go="daily">Daily Garden</button></div>
+      <div class="row small"><button class="pill" data-go="hats">Hats</button><button class="pill" data-go="stats">Stats</button><button class="pill" data-go="settings">Settings</button></div>
+    </div>
+  </section>
+
+  <section id="map" class="screen">
+    <div class="topbar"><button class="round back" data-go="title" aria-label="Back">&#8249;</button><div class="chip coins"><i class="coin-ic"></i><b id="mapCoins">0</b></div><div class="chip stars"><i class="star-ic"></i><b id="mapStars">0</b></div></div>
+    <div id="mapScroll"><div id="mapInner"></div></div>
+  </section>
+
+  <section id="panel" class="screen"><div class="topbar"><button class="round back" id="panelBack" aria-label="Back">&#8249;</button><h2 id="panelTitle"></h2></div><div id="panelBody"></div></section>
+
+  <section id="hud" class="screen">
+    <div id="hudTop">
+      <button class="round" id="pauseBtn" aria-label="Pause">&#10074;&#10074;</button>
+      <div id="hearts"></div>
+      <div class="chip"><i class="shroom-ic"></i><b id="minesLeft">0</b></div>
+      <div class="chip"><i class="clock-ic"></i><b id="timer">0:00</b></div>
+      <div class="chip coins" id="coinChip"><i class="coin-ic"></i><b id="hudCoins">0</b></div>
+    </div>
+    <div id="hudBottom">
+      <button id="modeBtn" class="tool" aria-label="Switch dig or flag"><span class="shovel">Dig</span><span class="sign">Flag</span></button>
+      <div id="hint"></div>
+      <button id="sniffBtn" class="tool sniff" aria-label="Sniff"><span>Sniff</span><i id="sniffPips"></i></button>
+    </div>
+    <div id="ring"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18"/></svg></div>
+  </section>
+
+  <div id="modal"><div class="card" id="modalCard"></div></div>
+  <div id="toasts"></div>
+</div>
+<script type="module" src="game.js?v=__V__"></script>
+<script>
+  if ('serviceWorker' in navigator && !/[?&]nosw/.test(location.search)) window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#05060c">
+  <meta name="format-detection" content="telephone=no">
+  <title>ECHOES</title>
+  <meta name="description" content="A time-loop co-op puzzle game where you cooperate with your past selves.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2307091a'/%3E%3Ccircle cx='24' cy='32' r='11' fill='%23ff6fcf' fill-opacity='.45'/%3E%3Ccircle cx='40' cy='32' r='12' fill='%23e6fdff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css?v=20261004m2">
+</head>
+<body>
+  <canvas id="game" aria-label="ECHOES game canvas"></canvas>
+  <div id="touch" aria-hidden="true">
+    <div id="dpad" data-dir="">
+      <div class="arm up"><i></i></div>
+      <div class="arm right"><i></i></div>
+      <div class="arm down"><i></i></div>
+      <div class="arm left"><i></i></div>
+      <div class="hub"></div>
+    </div>
+    <div id="tbtns">
+      <div class="tbtn" data-code="KeyU"><span>UNDO</span></div>
+      <div class="tbtn" data-code="Escape"><span>&#10074;&#10074;</span></div>
+      <div class="tbtn key" data-code="KeyE"><span>KEY</span></div>
+      <div class="tbtn rewind" data-code="KeyR"><span><b>&#8634;</b>REWIND</span></div>
+    </div>
+  </div>
+  <noscript><p class="noscript">ECHOES needs JavaScript to run.</p></noscript>
+  <script src="game.js?v=20261004m2"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en" data-build="20261009a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#04050c">
+<meta name="apple-mobile-web-app-title" content="Starfall">
+<meta name="application-name" content="Starfall">
+<link rel="manifest" href="manifest.webmanifest?v=20261009a">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<meta name="format-detection" content="telephone=no">
+<title>STARFALL · Minesweeper on a living world</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<!-- build 20261009a. cache-bust version: keep in sync with data-build above, VERSION in sw.js, BUILD + the audio.js import in game.js, BUILD in logic.js -->
+<link rel="stylesheet" href="style.css?v=20261009a">
+<script>
+/* Boot watchdog (plain script, runs even if the game's modules fail to load or parse).
+   If the game hasn't booted within 8 s, or a script error happens before boot, show "Tap to reload".
+   The reload unregisters the service worker, deletes the starfall-* caches and reloads from the network. */
+(function () {
+  var booted = false, box = null, timer;
+  var scopeBase = new URL('./', location.href).href;
+  function hardReload() {
+    var go = function () { location.reload(); };
+    var jobs = [];
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+        return Promise.all(rs.filter(function (r) { return r.scope.indexOf(scopeBase) === 0 || scopeBase.indexOf(r.scope) === 0; }).map(function (r) { return r.unregister(); }));
+      }));
+    } catch (e) { /* ignore */ }
+    try {
+      if (window.caches) jobs.push(caches.keys().then(function (ks) {
+        return Promise.all(ks.filter(function (k) { return k.indexOf('starfall-') === 0; }).map(function (k) { return caches.delete(k); }));
+      }));
+    } catch (e) { /* ignore */ }
+    Promise.all(jobs).then(go, go); setTimeout(go, 3000);
+  }
+  function show(msg, force) {
+    if ((booted && !force) || box) return;
+    box = document.createElement('button');
+    box.id = 'booterr'; box.type = 'button'; box.setAttribute('role', 'alert');
+    box.style.cssText = 'position:fixed;left:50%;bottom:calc(32px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:1000;' +
+      'max-width:86vw;padding:14px 22px;border-radius:16px;background:rgba(16,22,44,.94);border:1px solid rgba(95,227,255,.4);color:#e8f4ff;' +
+      'font:600 16px/1.35 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent';
+    box.innerHTML = 'Starfall didn\u2019t start<br><span style="color:#5fe3ff">Tap to reload</span><small style="display:block;margin-top:6px;font:400 11px/1.3 ui-monospace,Menlo,monospace;opacity:.6;word-break:break-word"></small>';
+    box.lastChild.textContent = msg ? String(msg).slice(0, 220) : '';
+    box.addEventListener('click', function () { box.firstChild.textContent = 'Reloading\u2026'; hardReload(); });
+    (document.body || document.documentElement).appendChild(box);
+  }
+  function ours(u) { return !u || (u.indexOf(location.origin) === 0 && u.indexOf('/.netlify/') < 0); }
+  addEventListener('error', function (e) {
+    if (booted) return;
+    var t = e.target;
+    if (t && t !== window && t.tagName) {          // a resource failed to load: only our own scripts matter
+      if (t.tagName === 'SCRIPT' && ours(t.src) && t.src) show('Could not load ' + t.getAttribute('src'));
+      return;
+    }
+    if (ours(e.filename)) show((e.message || 'Script error') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+  }, true);
+  var lastRejection = '';
+  addEventListener('unhandledrejection', function (e) { lastRejection = String(e.reason && e.reason.message || e.reason || ''); });
+  timer = setTimeout(function () {
+    var l = document.getElementById('loading');
+    if (l && l.classList.contains('out')) return;   // the game is up (an older game.js doesn't call __starfallBooted)
+    show(lastRejection || 'Still loading after 8 s');
+  }, 8000);
+  // called by game.js when it has booted (or reached its "needs WebGL 2" message)
+  window.__starfallBooted = function () { booted = true; clearTimeout(timer); if (box) { box.remove(); box = null; } };
+  // called by game.js for unrecoverable errors; autoHeal = reload by itself once per session (version mismatch)
+  window.__starfallFatal = function (msg, autoHeal) {
+    if (autoHeal) { var tried = false; try { tried = !!sessionStorage.getItem('starfall.healed'); sessionStorage.setItem('starfall.healed', '1'); } catch (e) { tried = true; }
+      if (!tried) { hardReload(); return; } }
+    show(msg, true);
+  };
+  window.__starfallHardReload = hardReload;
+})();
+</script>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+</head>
+<body>
+<canvas id="scene" aria-label="STARFALL planet"></canvas>
+<div id="flash"></div>
+<div id="vignette"></div>
+
+<div id="ring" aria-hidden="true">
+  <svg viewBox="0 0 64 64"><circle class="track" cx="32" cy="32" r="26"/><circle class="fill" cx="32" cy="32" r="26"/></svg>
+</div>
+
+<div id="hud" class="hidden">
+  <div class="bar glass">
+    <button id="btn-home" class="icon" aria-label="Menu">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="stat" title="Mines left">
+      <svg class="mine-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.8 2.8M16.2 16.2L19 19M5 19l2.8-2.8M16.2 7.8L19 5"/></svg>
+      <span id="mines">0</span>
+    </div>
+    <div class="stat" title="Time">
+      <svg class="clock-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+      <span id="timer">0:00</span>
+    </div>
+    <button id="btn-sound" class="icon" aria-label="Sound settings" aria-haspopup="dialog" aria-controls="mixer" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><path class="spk" d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path class="waves" d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11"/><path class="mute" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
+    </button>
+    <button id="btn-restart" class="icon" aria-label="Restart">
+      <svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 11-2.2-5.3"/><path d="M19.5 4.5v4.2h-4.2"/></svg>
+    </button>
+  </div>
+  <div id="chip" class="chip glass hidden"><span id="chip-label"></span><span id="shields" aria-label="Shields"></span></div>
+  <button id="btn-flag" class="glass fab" aria-pressed="false" aria-label="Flag mode">
+    <svg viewBox="0 0 24 24"><path d="M6 21V4"/><path class="pennant" d="M6 4.5h11l-2.6 3.8L17 12H6z"/></svg>
+    <span class="lbl">Flag</span>
+  </button>
+  <div id="hint" class="glass">Tap to reveal · Hold to flag · Drag to spin · Pinch to zoom</div>
+</div>
+
+<div id="mixer" class="mixer hidden" role="dialog" aria-modal="true" aria-labelledby="mixer-title">
+  <div class="mixer-card glass">
+    <header><div><h3 id="mixer-title">Sound</h3><span class="paused">Game paused</span></div><button id="mix-close" class="icon" aria-label="Close sound settings"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div class="mixer-rows"><!-- filled by game.js mixerHTML('mix') --></div>
+  </div>
+</div>
+
+<div id="title" class="screen">
+  <header class="brand">
+    <h1>STARFALL</h1>
+    <p class="tag">Minesweeper on a living world</p>
+  </header>
+  <div class="bottom">
+    <div id="modes" class="seg glass" role="tablist" aria-label="Mode">
+      <button data-play="classic" role="tab">Classic</button>
+      <button data-play="zen" role="tab">Zen</button>
+      <button data-play="daily" role="tab">Daily</button>
+    </div>
+    <div id="diffs" role="radiogroup" aria-label="World"></div>
+    <div class="launch">
+      <button id="btn-stats" class="icon glass round" aria-label="Stats">
+        <svg viewBox="0 0 24 24"><path d="M5 20V11M10 20V5M15 20v-7M20 20V8"/></svg>
+      </button>
+      <button id="btn-play" class="primary">Launch</button>
+      <button id="btn-settings" class="icon glass round" aria-label="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg>
+      </button>
+    </div>
+    <p class="howto" id="howto"></p>
+  </div>
+</div>
+
+<div id="result" class="screen hidden">
+  <div class="card glass">
+    <div id="res-kicker" class="kicker"></div>
+    <h2 id="res-title"></h2>
+    <p id="res-sub"></p>
+    <div id="res-best"></div>
+    <div id="res-stats" class="res-stats"></div>
+    <div class="row">
+      <button id="res-again" class="primary">Play again</button>
+      <button id="res-menu" class="ghost">Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="sheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet-card glass">
+    <header><h3 id="sheet-title"></h3><button id="sheet-close" class="icon" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div id="sheet-body" class="sheet-body"></div>
+  </div>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<div id="loading"><div class="spinner"></div></div>
+<div id="nogl" class="hidden"><p>STARFALL needs WebGL 2. Try a newer browser.</p></div>
+
+<script src="logic.js?v=20261009a"></script>
+<script type="module" src="game.js?v=20261009a"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  addEventListener('load', () => {
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' }).then(reg => {
+      // iOS resumes a home-screen app without a navigation, so it never looks for updates by itself: check on resume.
+      let lastCheck = Date.now();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && Date.now() - lastCheck > 60000) { lastCheck = Date.now(); reg.update().catch(() => {}); }
+      });
+    }).catch(() => {});
+    // A new version took over this page: reload into it, but only between games (never mid-game, never on first install).
+    let pending = false;
+    const applyUpdate = () => { if (pending && (!window.__starfallIdle || window.__starfallIdle())) { pending = false; location.reload(); } };
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) { pending = true; applyUpdate(); } });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') applyUpdate(); });
+  });
+}
+</script>
+</body>
+</html>

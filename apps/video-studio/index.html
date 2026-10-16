@@ -1,0 +1,57 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="theme-color" content="#0b0d10">
+<title>Video Studio</title><link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+</head><body>
+<div id="home" class="screen">
+  <header class="homebar"><div class="logo"><span class="lg">▶</span> Video Studio</div><a class="hub" href="../">All apps</a></header>
+  <main class="homemain">
+    <section class="hero">
+      <button id="newMovie" class="card-btn primary"><b>＋</b><span>New Movie</span><small>Magnetic timeline, titles, colour, audio</small></button>
+      <button id="newTrailer" class="card-btn"><b>🎞</b><span>New Trailer</span><small>Fill in the blanks, Hollywood-style</small></button>
+      <button id="newMagic" class="card-btn"><b>✨</b><span>Magic Movie</span><small>Pick clips, get an edited movie</small></button>
+    </section>
+    <h2>Projects</h2><div id="projList" class="projgrid"></div>
+    <p class="foot">Everything is stored privately on this device. Exports are MP4 (H.264) that play on iPhone.</p>
+  </main>
+</div>
+<div id="editor" class="screen" hidden>
+  <header id="top">
+    <button id="backBtn" class="ib" title="Projects">‹</button>
+    <input id="projName" spellcheck="false" aria-label="Project name">
+    <span id="crumbs"></span><div class="sp"></div>
+    <select id="aspectSel" title="Aspect ratio"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+    <button id="undoBtn" class="ib" title="Undo (⌘Z)">↶</button><button id="redoBtn" class="ib" title="Redo (⇧⌘Z)">↷</button>
+    <button id="helpBtn" class="ib" title="Shortcuts & help">?</button>
+    <button id="exportBtn" class="primary">Export</button>
+  </header>
+  <div id="work">
+    <aside id="lib" class="panel"><nav id="libTabs" class="tabs"></nav><div id="libBody" class="pbody"></div></aside>
+    <section id="viewerCol">
+      <div id="viewer"><div id="stage"><canvas id="view"></canvas></div><div id="vInfo"></div><button id="moveBtn" class="vbtn" title="Move & scale the selected clip in the viewer">✥</button><button id="fsBtn" class="vbtn" title="Full screen">⤢</button></div>
+      <div id="srcBar" hidden></div>
+      <div id="transport">
+        <span id="tc">00:00:00</span><div class="sp"></div>
+        <button class="ib tb" data-k="I" title="Set start (I)">I</button>
+        <button class="ib tb" data-k="J" title="Play backwards / faster (J)">◀◀</button>
+        <button class="ib tb" data-k="ArrowLeft" title="Previous frame (←)">◁</button>
+        <button id="playBtn" class="play" title="Play / pause (Space)">▶</button>
+        <button class="ib tb" data-k="ArrowRight" title="Next frame (→)">▷</button>
+        <button class="ib tb" data-k="L" title="Play / faster (L)">▶▶</button>
+        <button class="ib tb" data-k="O" title="Set end (O)">O</button>
+        <div class="sp"></div><span id="tdur">0:00</span>
+      </div>
+    </section>
+    <aside id="insp" class="panel"><div class="tabs"><b>Inspector</b><div class="sp"></div><button class="ib closeSheet">✕</button></div><div id="inspBody" class="pbody"></div></aside>
+  </div>
+  <div id="toolbar"></div>
+  <div id="tlWrap"><canvas id="tl"></canvas></div>
+  <nav id="mnav"></nav>
+</div>
+<div id="modal" hidden><div class="sheet"><div class="sheetHead"><b id="mTitle"></b><button class="ib" id="mClose">✕</button></div><div id="mBody"></div></div></div>
+<div id="toast"></div><div id="dragGhost" hidden></div>
+<input type="file" id="fileIn" multiple accept="video/*,audio/*,image/*,.mov,.mp4,.m4v,.m4a,.mp3,.wav,.heic" hidden>
+<input type="file" id="lutIn" accept=".cube" hidden>
+<script type="module" src="js/app.js"></script>
+</body></html>

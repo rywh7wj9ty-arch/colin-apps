@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lumen">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="LUMEN: a game of light and falling glass.">
+<title>LUMEN</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="stylesheet" href="style.css">
+<script>
+/* Boot guard: any failure before the game is running shows a "Tap to reload" card with the error text,
+   instead of an endless spinner. Runs before anything else. */
+(function () {
+  var failed = false;
+  function $(id) { return document.getElementById(id); }
+  function show(msg) {
+    var f = $('fatal'); if (!f) { document.addEventListener('DOMContentLoaded', function () { show(msg); }); return; }
+    var l = $('loading'); if (l) l.style.display = 'none';
+    $('fatal-msg').textContent = String(msg || 'Unknown error').slice(0, 400);
+    f.hidden = false; f.style.display = 'flex';
+  }
+  window.__lumenFail = function (msg) { if (failed) return; failed = true; show(msg); };
+  window.addEventListener('error', function (e) {
+    if (window.__lumenBooted) return;
+    var t = e && e.target, msg;
+    if (t && t !== window && (t.src || t.href)) msg = 'Could not load ' + String(t.src || t.href).split('/').pop();
+    else msg = (e.message || 'Script error') + (e.filename ? ' (' + String(e.filename).split('/').pop() + ':' + e.lineno + ')' : '');
+    window.__lumenFail(msg);
+  }, true);
+  window.addEventListener('unhandledrejection', function (e) {
+    if (window.__lumenBooted) return;
+    var r = e && e.reason; window.__lumenFail('Startup failed: ' + (r && r.message ? r.message : r));
+  });
+  window.__lumenHardReload = function () {
+    var done = function () { location.reload(); };
+    try {
+      var jobs = [];
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+      if (window.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+      Promise.all(jobs).then(done, done); setTimeout(done, 2500);
+    } catch (err) { done(); }
+  };
+  // timers, not animation frames: the loading card always goes away
+  setTimeout(function () { if (window.__lumenBooted) { var l = $('loading'); if (l) l.style.display = 'none'; } }, 5000);
+  setTimeout(function () { if (!window.__lumenBooted) window.__lumenFail('LUMEN took too long to start. Your device may be holding an old copy.'); }, 10000);
+})();
+</script>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div id="surface" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div id="hud" class="hidden">
+  <div class="hud-block" id="hud-score"><span class="lbl">Score</span><span class="val">0</span></div>
+  <div class="hud-block" id="hud-level"><span class="lbl">Level</span><span class="val">1</span></div>
+  <div class="hud-block" id="hud-lines"><span class="lbl">Lines</span><span class="val">0</span></div>
+  <div class="hud-block" id="hud-time"><span class="lbl">Time</span><span class="val">0:00</span></div>
+  <div class="hud-block" id="hud-pps"><span class="lbl">PPS</span><span class="val">0.00</span></div>
+  <div id="hud-world"></div>
+  <div class="hud-label" id="lbl-hold">Hold</div>
+  <div class="hud-label" id="lbl-next">Next</div>
+  <div id="hud-b2b"></div>
+  <button id="btn-pause" aria-label="Pause"><span></span><span></span></button>
+</div>
+
+<div id="buttons" class="hidden">
+  <div class="pad left">
+    <button data-act="hard" class="b-hard" aria-label="Hard drop">&#x2193;&#x2193;</button>
+    <button data-act="left" aria-label="Left">&#x2190;</button>
+    <button data-act="soft" aria-label="Soft drop">&#x2193;</button>
+    <button data-act="right" aria-label="Right">&#x2192;</button>
+  </div>
+  <div class="pad right">
+    <button data-act="hold" class="b-hold" aria-label="Hold">HOLD</button>
+    <button data-act="ccw" aria-label="Rotate left">&#x21BA;</button>
+    <button data-act="cw" class="b-cw" aria-label="Rotate right">&#x21BB;</button>
+  </div>
+</div>
+
+<div id="popups"></div>
+<div id="countdown"></div>
+
+<!-- TITLE -->
+<section class="screen" id="scr-title">
+  <div class="title-wrap">
+    <h1 class="logo" aria-label="Lumen"><span>L</span><span>U</span><span>M</span><span>E</span><span>N</span></h1>
+    <p class="tagline">a game of light and falling glass</p>
+    <div class="modes" id="mode-list"></div>
+    <nav class="title-nav">
+      <button data-go="stats">Records</button>
+      <button data-go="settings">Settings</button>
+      <button data-go="howto">How to play</button>
+    </nav>
+  </div>
+</section>
+
+<!-- PAUSE -->
+<section class="screen" id="scr-pause">
+  <div class="panel narrow">
+    <h2>Paused</h2>
+    <p class="sub" id="pause-sub"></p>
+    <div class="stack">
+      <button class="primary" data-do="resume">Resume</button>
+      <button data-do="restart">Restart</button>
+      <button data-do="end-zen" id="btn-endzen">End session</button>
+      <button data-go="settings">Settings</button>
+      <button data-do="quit">Quit to title</button>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="screen scroll" id="scr-results">
+  <div class="panel results">
+    <p class="eyebrow" id="res-mode"></p>
+    <h2 id="res-title">Game Over</h2>
+    <div class="record-banner" id="res-record" hidden>New record</div>
+    <div class="big-score" id="res-score">0</div>
+    <p class="sub" id="res-sub"></p>
+    <div class="res-grid" id="res-grid"></div>
+    <div class="row-buttons">
+      <button class="primary" data-do="again">Play again</button>
+      <button data-go="stats">Records</button>
+      <button data-do="quit">Title</button>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="screen scroll" id="scr-stats">
+  <div class="panel wide">
+    <div class="panel-head"><h2>Records</h2><button class="close" data-back aria-label="Close">&#x2715;</button></div>
+    <div class="tabs" id="stats-tabs"></div>
+    <div id="stats-mode"></div>
+    <h3>Recent scores</h3>
+    <canvas id="chart" height="140"></canvas>
+    <h3>Lifetime</h3>
+    <div class="life-grid" id="life-grid"></div>
+    <h3>How you clear lines</h3>
+    <div id="clear-break"></div>
+    <h3>Achievements <span class="dim" id="ach-count"></span></h3>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section class="screen scroll" id="scr-settings">
+  <div class="panel wide">
+    <div class="panel-head"><h2>Settings</h2><button class="close" data-back aria-label="Close">&#x2715;</button></div>
+    <div id="settings-body"></div>
+  </div>
+</section>
+
+<!-- HOW TO -->
+<section class="screen scroll" id="scr-howto">
+  <div class="panel wide">
+    <div class="panel-head"><h2>How to play</h2><button class="close" data-back aria-label="Close">&#x2715;</button></div>
+    <div class="howto">
+      <h3>Touch</h3>
+      <ul>
+        <li><b>Drag sideways</b> anywhere: the piece follows your finger, one cell at a time.</li>
+        <li><b>Tap</b>: rotate. Left half turns it left, right half turns it right (or any tap turns right; see Settings).</li>
+        <li><b>Two-finger tap</b>: rotate left.</li>
+        <li><b>Flick down</b>: hard drop. <b>Drag down slowly</b>: soft drop.</li>
+        <li><b>Flick up</b>: hold.</li>
+        <li>Prefer buttons? Settings &rarr; Controls &rarr; Buttons.</li>
+      </ul>
+      <h3>Keyboard</h3>
+      <ul class="keys">
+        <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> move &nbsp; <kbd>&darr;</kbd> soft drop &nbsp; <kbd>Space</kbd> hard drop</li>
+        <li><kbd>&uarr;</kbd> / <kbd>X</kbd> rotate right &nbsp; <kbd>Z</kbd> rotate left &nbsp; <kbd>A</kbd> rotate 180</li>
+        <li><kbd>C</kbd> / <kbd>Shift</kbd> hold &nbsp; <kbd>Esc</kbd> pause &nbsp; <kbd>R</kbd> restart</li>
+      </ul>
+      <h3>Scoring</h3>
+      <ul>
+        <li>Clear four lines at once for a <b>Tetris</b>. Twist a T into a slot for a <b>T-spin</b>.</li>
+        <li>Tetrises and T-spins in a row are <b>back-to-back</b> (&times;1.5). Clears on consecutive pieces build a <b>combo</b>.</li>
+        <li>Empty the whole well for a <b>Perfect Clear</b>.</li>
+      </ul>
+      <h3>Worlds</h3>
+      <p>Every few levels the world changes: Dawn Tide, Aurora Veil, Neon Rain, Crystal Hollow, Deep Field and the Solar Crown. The music grows with you.</p>
+      <h3>On iPhone and iPad</h3>
+      <p>Open in Safari, tap Share, then <b>Add to Home Screen</b>. LUMEN then runs full screen and works offline. If the music is silent, check the ring/silent switch.</p>
+    </div>
+  </div>
+</section>
+
+<div id="toasts"></div>
+
+<div id="loading"><div class="ld-logo">LUMEN</div><div class="ld-bar"><i></i></div></div>
+<div id="fatal" hidden>
+  <div class="fatal-card" onclick="window.__lumenHardReload()">
+    <div class="fatal-title">LUMEN couldn&rsquo;t start</div>
+    <div class="fatal-msg" id="fatal-msg"></div>
+    <button type="button">Tap to reload</button>
+  </div>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>

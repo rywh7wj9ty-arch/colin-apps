@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-build="__BUILD__">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pocket Weather">
+<meta name="application-name" content="Pocket Weather">
+<meta name="theme-color" content="#9fd0ff">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="You are the weather. Rain, shine and blow a little friend across tiny floating islands.">
+<title>Pocket Weather</title>
+<link rel="manifest" href="manifest.webmanifest?v=__BUILD__">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="stylesheet" href="style.css?v=__BUILD__">
+<script>
+/* Boot watchdog: a plain script that runs even if the game's modules fail to load or parse.
+   If the game has not booted within 9 s, or a script error happens before boot, it shows "Tap to reload"
+   with the error text. Reloading unregisters the service worker and clears this game's caches first. */
+(function () {
+  var booted = false, box = null, timer;
+  var scopeBase = new URL('./', location.href).href;
+  function hardReload() {
+    var go = function () { location.reload(); };
+    var jobs = [];
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+        return Promise.all(rs.filter(function (r) { return r.scope.indexOf(scopeBase) === 0 || scopeBase.indexOf(r.scope) === 0; }).map(function (r) { return r.unregister(); }));
+      }));
+    } catch (e) { /* ignore */ }
+    try {
+      if (window.caches) jobs.push(caches.keys().then(function (ks) {
+        return Promise.all(ks.filter(function (k) { return k.indexOf('pocketweather-') === 0; }).map(function (k) { return caches.delete(k); }));
+      }));
+    } catch (e) { /* ignore */ }
+    Promise.all(jobs).then(go, go); setTimeout(go, 3000);
+  }
+  function show(msg, force) {
+    if ((booted && !force) || box) return;
+    var l = document.getElementById('loading'); if (l) l.style.display = 'none';
+    box = document.createElement('button');
+    box.id = 'booterr'; box.type = 'button'; box.setAttribute('role', 'alert');
+    box.innerHTML = '<b>Pocket Weather didn\u2019t start</b><span>Tap to reload</span><small></small>';
+    box.lastChild.textContent = msg ? String(msg).slice(0, 240) : '';
+    box.addEventListener('click', function () { box.firstChild.textContent = 'Reloading\u2026'; hardReload(); });
+    (document.body || document.documentElement).appendChild(box);
+  }
+  function ours(u) { return !u || u.indexOf(location.origin) === 0; }
+  addEventListener('error', function (e) {
+    if (booted) return;
+    var t = e.target;
+    if (t && t !== window && t.tagName) {
+      if (t.tagName === 'SCRIPT' && t.src && ours(t.src)) show('Could not load ' + t.getAttribute('src'));
+      return;
+    }
+    if (ours(e.filename)) show((e.message || 'Script error') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+  }, true);
+  var lastRejection = '';
+  addEventListener('unhandledrejection', function (e) { lastRejection = String(e.reason && e.reason.message || e.reason || ''); if (!booted && lastRejection) show(lastRejection); });
+  timer = setTimeout(function () { show(lastRejection || 'Still loading after 9 seconds'); }, 9000);
+  window.__pwBooted = function () { if (booted) return; booted = true; clearTimeout(timer); if (box) { box.remove(); box = null; } };
+  window.__pwFatal = function (msg) { show(msg, true); };
+  window.__pwHardReload = hardReload;
+})();
+</script>
+</head>
+<body data-screen="boot">
+<canvas id="scene" aria-label="Pocket Weather island"></canvas>
+<div id="flash"></div>
+
+<!-- title -->
+<div id="title" class="screen hidden">
+  <h1 class="logo" aria-label="Pocket Weather"><span class="l1">Pocket</span><span class="l2">Weather</span></h1>
+  <p class="tagline">You can't walk. You're the weather.</p>
+  <div class="title-buttons">
+    <button id="btn-play" class="primary big">Play</button>
+    <div class="row2">
+      <button id="btn-collection" class="soft">Collection</button>
+      <button id="btn-settings" class="soft">Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- world map -->
+<div id="map" class="screen hidden">
+  <div class="topbar">
+    <button id="map-back" class="icon" aria-label="Back to title"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="pill"><i class="mini drop-ico"></i><span id="map-drops">0</span></div>
+    <button id="map-collection" class="icon" aria-label="Collection"><svg viewBox="0 0 24 24"><path d="M5 20V11M10 20V5M15 20v-7M20 20V8"/></svg></button>
+  </div>
+  <p class="maphint">Drag to explore · tap an island stop</p>
+</div>
+<div id="levelcard" class="hidden">
+  <button id="lc-close" class="icon x" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div id="lc-kicker" class="kicker"></div>
+  <h2 id="lc-title"></h2>
+  <div class="lc-row"><div id="lc-drops" class="drops"></div><div id="lc-weather" class="weathers"></div></div>
+  <p id="lc-chal" class="chal"></p>
+  <button id="lc-play" class="primary big">Play</button>
+</div>
+
+<!-- level HUD -->
+<div id="hud" class="hidden">
+  <div class="topbar">
+    <button id="btn-pause" class="icon" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>
+    <div class="lvl"><span id="hud-level"></span><div id="hud-drops" class="drops"></div></div>
+    <div id="hud-uses" class="uses" title="Weather used / challenge"></div>
+    <button id="btn-retry" class="icon" aria-label="Start again"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 11-2.2-5.3"/><path d="M19.5 4.5v4.2h-4.2"/></svg></button>
+  </div>
+  <div class="rotate">
+    <button id="rot-l" class="icon small" aria-label="Turn island left"><svg viewBox="0 0 24 24"><path d="M8 7H4V3"/><path d="M4.5 7A8.5 8.5 0 1112 20.5"/></svg></button>
+    <button id="rot-r" class="icon small" aria-label="Turn island right"><svg viewBox="0 0 24 24"><path d="M16 7h4V3"/><path d="M19.5 7A8.5 8.5 0 1012 20.5"/></svg></button>
+  </div>
+  <button id="hint-btn" class="icon hint hidden" aria-label="Hint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0012 3z"/></svg></button>
+  <div id="weatherbar"></div>
+</div>
+<div id="bubble"></div>
+<div id="banner"><span class="n"></span><span class="t"></span></div>
+
+<div id="result" class="hidden">
+  <div class="card">
+    <div id="res-kicker" class="kicker"></div>
+    <h2 id="res-title"></h2>
+    <div id="res-drops" class="drops big"></div>
+    <p id="res-chal" class="chal"></p>
+    <p id="res-sub" class="sub"></p>
+    <div class="row">
+      <button id="res-retry" class="soft">Again</button>
+      <button id="res-map" class="soft">Map</button>
+      <button id="res-next" class="primary">Next</button>
+    </div>
+  </div>
+</div>
+
+<div id="sheet" class="hidden" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+  <div class="sheet-card">
+    <header><h3 id="sheet-title"></h3><button id="sheet-close" class="icon" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+<div id="toasts" aria-live="polite"></div>
+
+<div id="loading"><div class="ld-cloud"><i></i><i></i><i></i></div><p>Gathering clouds…</p></div>
+<div id="nogl" class="hidden"><p>Pocket Weather needs WebGL. Please try a newer browser.</p></div>
+
+<script src="logic.js?v=__BUILD__"></script>
+<script src="levels.js?v=__BUILD__"></script>
+<script type="module" src="game.js?v=__BUILD__"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  addEventListener('load', function () {
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' }).then(function (reg) {
+      // iOS resumes a home-screen app without a navigation, so check for updates when it comes back to the foreground
+      var lastCheck = Date.now();
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && Date.now() - lastCheck > 30000) { lastCheck = Date.now(); reg.update().catch(function () {}); }
+      });
+    }).catch(function () {});
+    // a new version took over: reload into it, but never in the middle of a level
+    var pending = false;
+    function apply() { if (pending && (!window.__pwIdle || window.__pwIdle())) { pending = false; location.reload(); } }
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadController) { pending = true; apply(); } });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') apply(); });
+    setInterval(apply, 5000);
+  });
+}
+</script>
+</body>
+</html>

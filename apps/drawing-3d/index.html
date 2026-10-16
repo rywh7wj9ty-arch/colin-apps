@@ -1,0 +1,2600 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GRP Enclosure — EDS 07-3102_01 | Sheets 1–5</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --panel: #1a2332;
+    --panel-border: #2a3a4e;
+    --text: #e8eef5;
+    --muted: #8a9bb0;
+    --accent: #3d9b6e;
+    --accent-hover: #4bb87e;
+    --danger: #c9a227;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  #title-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    height: 44px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px;
+    background: linear-gradient(180deg, #15202b 0%, #0f1419ee 100%);
+    border-bottom: 1px solid var(--panel-border);
+    font-size: 13px; letter-spacing: 0.02em;
+  }
+  #title-bar .title { font-weight: 600; color: var(--text); }
+  #title-bar .ref { color: var(--muted); font-size: 12px; margin-left: 10px; }
+  #title-bar .badge {
+    background: var(--accent); color: #fff; font-size: 10px;
+    padding: 3px 8px; border-radius: 3px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+  #ui-panel h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin: 12px 0 8px; font-weight: 600;
+  }
+  #ui-panel h2:first-child { margin-top: 0; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin: 6px 0;
+  }
+  .row label { color: var(--text); flex: 1; cursor: pointer; user-select: none; }
+  input[type="checkbox"] {
+    width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer;
+  }
+  input[type="range"] {
+    width: 100%; accent-color: var(--accent); cursor: pointer;
+  }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  button {
+    flex: 1; min-width: 0;
+    background: #243447; color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px; padding: 7px 10px;
+    font-size: 11px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  button:hover { background: #2d4058; border-color: var(--accent); }
+  button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .colour-btns button { flex: 1; }
+  .colour-btns button.dark-green { border-left: 3px solid #1a4d2e; }
+  .colour-btns button.mid-brown { border-left: 3px solid #6b4423; }
+  .slider-val {
+    color: var(--muted); font-variant-numeric: tabular-nums; min-width: 36px; text-align: right;
+  }
+  #legend {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--panel-border);
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 6px; margin: 2px 0; border-radius: 4px;
+    cursor: pointer; color: var(--muted);
+  }
+  .legend-item:hover { background: #243447; color: var(--text); }
+  .legend-item .swatch {
+    width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
+  }
+  #scale-bar {
+    position: fixed; bottom: 16px; left: 16px; z-index: 25;
+    background: rgba(26,35,50,0.9);
+    border: 1px solid var(--panel-border);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 11px; color: var(--muted);
+  }
+  #scale-bar .bar {
+    width: 80px; height: 6px; margin-top: 4px;
+    background: linear-gradient(90deg, #fff 0 50%, transparent 50% 100%);
+    background-size: 20px 6px;
+    border: 1px solid #fff; border-radius: 1px;
+  }
+  #scale-bar .labels {
+    display: flex; justify-content: space-between; width: 80px; margin-top: 2px;
+    font-size: 9px; color: var(--text);
+  }
+  #hint {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 25; font-size: 11px; color: var(--muted);
+    background: rgba(15,20,25,0.75); padding: 6px 14px; border-radius: 20px;
+    pointer-events: none; transition: opacity 0.5s;
+  }
+  #label-overlay {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  }
+  .css-label {
+    position: absolute; transform: translate(-50%, -100%);
+    background: rgba(15,20,25,0.85);
+    border: 1px solid var(--panel-border);
+    color: var(--text); font-size: 10px; font-weight: 600;
+    padding: 3px 7px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; letter-spacing: 0.03em;
+  }
+  .css-label.dim {
+    background: rgba(61,155,110,0.9); border-color: var(--accent);
+    color: #fff; font-weight: 500;
+  }
+
+  #ui-panel h2 .sheet-tag {
+    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px;
+    color: #fff; margin-left: 4px; letter-spacing: 0.04em; text-transform: none;
+    vertical-align: middle;
+  }
+  .preset-note { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #3a4a5e; border-radius: 3px; }
+
+  #tip-strip {
+    position: fixed; top: 44px; left: 0; right: 0; z-index: 22;
+    background: #1e3a2f; color: #c8e6d4;
+    font-size: 11px; text-align: center;
+    padding: 5px 12px;
+    border-bottom: 1px solid #2a4a3a;
+    line-height: 1.35;
+  }
+  #tip-strip strong { color: #fff; font-weight: 600; }
+  #canvas-wrap {
+    position: absolute; inset: 72px 0 0 0;
+  }
+  #ui-panel {
+    position: fixed; top: 84px; right: 12px; z-index: 30;
+    width: 300px; max-height: calc(100vh - 108px);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+    padding: 14px 14px 16px;
+    font-size: 12px;
+  }
+  #fallback-banner {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--bg);
+    color: var(--text);
+    align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  #fallback-banner.show { display: flex; }
+  #fallback-banner .box {
+    max-width: 420px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  #fallback-banner h1 {
+    font-size: 16px; margin-bottom: 12px; color: var(--danger);
+  }
+  #fallback-banner p {
+    font-size: 13px; color: var(--muted); line-height: 1.5;
+  }
+  @media (max-width: 640px) {
+    #title-bar { height: auto; min-height: 44px; padding: 8px 12px; flex-wrap: wrap; gap: 6px; }
+    #title-bar .ref { display: block; margin-left: 0; margin-top: 2px; }
+    #tip-strip { top: 52px; font-size: 10px; padding: 6px 10px; }
+    #canvas-wrap { inset: 96px 0 0 0; }
+    #ui-panel {
+      top: auto; bottom: 8px; right: 8px; left: 8px;
+      width: auto; max-height: 42vh;
+      padding: 12px;
+    }
+    input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; }
+    button { padding: 10px 12px; font-size: 12px; min-height: 40px; }
+    .row { margin: 8px 0; }
+    .legend-item { padding: 8px 6px; min-height: 36px; }
+    #scale-bar { bottom: calc(42vh + 20px); left: 8px; }
+    #hint { bottom: calc(42vh + 20px); font-size: 10px; max-width: 90%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+  <div id="tip-strip">Tip: open in Safari/Chrome. Use Drawing layers for Sheets 2–5. If you still see code, Share → Open in Browser.</div>
+  <div id="fallback-banner" role="alert">
+    <div class="box">
+      <h1>3D libraries did not load</h1>
+      <p>This viewer needs a network connection once to load 3D libraries, then open this file in Safari/Chrome (not as a text preview).</p>
+    </div>
+  </div>
+  <div id="title-bar">
+    <div>
+      <span class="title">GRP Enclosure — EDS 07-3102_01 | Sheets 1–5</span>
+      <span class="ref">Civil · Reinforcement · Flooring · Earthing · Small power &amp; lighting</span>
+    </div>
+    <span class="badge">UK Power Networks</span>
+  </div>
+
+  <div id="canvas-wrap">
+    <div id="label-overlay"></div>
+  </div>
+
+  <div id="ui-panel">
+    <h2>1. Visibility</h2>
+    <div class="row"><label for="tog-walls">Enclosure walls</label><input type="checkbox" id="tog-walls" checked /></div>
+    <div class="row"><label for="tog-roof">Roof</label><input type="checkbox" id="tog-roof" checked /></div>
+    <div class="row"><label for="tog-doors">Doors</label><input type="checkbox" id="tog-doors" checked /></div>
+    <div class="row"><label for="tog-foundation">Foundation</label><input type="checkbox" id="tog-foundation" checked /></div>
+    <div class="row"><label for="tog-interior">Interior equipment</label><input type="checkbox" id="tog-interior" checked /></div>
+    <div class="row"><label for="tog-ground">Ground context</label><input type="checkbox" id="tog-ground" checked /></div>
+    <div class="row"><label for="tog-dims">Dimension annotations</label><input type="checkbox" id="tog-dims" /></div>
+    <div class="row"><label for="tog-pole">Satellite dish pole</label><input type="checkbox" id="tog-pole" /></div>
+    <div class="row"><label for="tog-labels">Name labels</label><input type="checkbox" id="tog-labels" checked /></div>
+
+    <h2>2. Drawing layers</h2>
+    <div class="row"><label for="tog-rebar">Reinforcement <span class="sheet-tag" style="background:#c45a20">S2</span></label><input type="checkbox" id="tog-rebar" /></div>
+    <div class="row"><label for="tog-flooring">GRP flooring <span class="sheet-tag" style="background:#2d6b3a">S3</span></label><input type="checkbox" id="tog-flooring" checked /></div>
+    <div class="row"><label for="tog-earthing">Earthing <span class="sheet-tag" style="background:#c9a227">S4</span></label><input type="checkbox" id="tog-earthing" /></div>
+    <div class="row"><label for="tog-services">Small power &amp; lighting <span class="sheet-tag" style="background:#e070a0">S5</span></label><input type="checkbox" id="tog-services" checked /></div>
+
+    <h2>3. Doors / explode / colour</h2>
+    <div class="row">
+      <span>Open angle</span>
+      <span class="slider-val" id="door-val">0°</span>
+    </div>
+    <input type="range" id="door-angle" min="0" max="90" value="0" step="1" />
+    <div class="btn-row">
+      <button type="button" id="btn-doors-closed">Closed</button>
+      <button type="button" id="btn-doors-open">Open 90°</button>
+    </div>
+    <div class="btn-row colour-btns" style="margin-top:8px">
+      <button type="button" id="btn-colour-green" class="dark-green active">Dark Green</button>
+      <button type="button" id="btn-colour-brown" class="mid-brown">Mid Brown</button>
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button type="button" id="btn-explode">Exploded view</button>
+      <button type="button" id="btn-reset">Reset camera</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button type="button" id="btn-iso">Iso front</button>
+    </div>
+
+    <h2>4. Sheet presets</h2>
+    <div class="btn-row">
+      <button type="button" id="btn-civil-only">Civil only</button>
+      <button type="button" id="btn-show-all">Show all layers</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button type="button" id="btn-foundation-dig">Foundation dig</button>
+    </div>
+    <p class="preset-note">Foundation dig: hide enclosure, show rebar + earthing + recess.</p>
+
+    <div id="legend">
+      <h2>5. Legend (click to focus)</h2>
+      <div class="legend-item" data-focus="front"><span class="swatch" style="background:#1a4d2e"></span>Front / Doors</div>
+      <div class="legend-item" data-focus="foundation"><span class="swatch" style="background:#9a9a90"></span>Foundation / Plinth</div>
+      <div class="legend-item" data-focus="recess"><span class="swatch" style="background:#6a6a60"></span>Cable recess</div>
+      <div class="legend-item" data-focus="transformer"><span class="swatch" style="background:#4a5548"></span>Transformer</div>
+      <div class="legend-item" data-focus="lv"><span class="swatch" style="background:#8a9098"></span>LV Cabinet</div>
+      <div class="legend-item" data-focus="rmu"><span class="swatch" style="background:#3d4f63"></span>RMU</div>
+      <div class="legend-item" data-focus="rtu"><span class="swatch" style="background:#b8a88a"></span>RTU</div>
+      <div class="legend-item" data-focus="db"><span class="swatch" style="background:#e070a0"></span>Distribution board</div>
+      <div class="legend-item" data-focus="flooring"><span class="swatch" style="background:#2d6b3a"></span>GRP flooring (S3)</div>
+      <div class="legend-item" data-focus="rebar"><span class="swatch" style="background:#c45a20"></span>Reinforcement (S2)</div>
+      <div class="legend-item" data-focus="earthing"><span class="swatch" style="background:#c9a227"></span>Earthing (S4)</div>
+      <div class="legend-item" data-focus="earthbar"><span class="swatch" style="background:#b87333"></span>10-way earth bar</div>
+      <div class="legend-item" data-focus="services"><span class="swatch" style="background:#e070a0"></span>Small power (S5)</div>
+    </div>
+  </div></div>
+
+  <div id="scale-bar">
+    <div>Scale bar — 1 m</div>
+    <div class="bar"></div>
+    <div class="labels"><span>0</span><span>1 m</span></div>
+  </div>
+  <div id="hint">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+'use strict';
+
+if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
+  var banner = document.getElementById('fallback-banner');
+  if (banner) banner.classList.add('show');
+  return;
+}
+
+// ─── Dimensions (metres; from EDS 07-3102_01 Sheet 1) ───
+const D = {
+  housingW: 2.8,
+  housingD: 2.8,
+  housingH: 2.4,
+  roofOverhang: 0.15,      // front & back only
+  plinthW: 3.0,
+  plinthD: 3.0,
+  plinthH: 0.15,           // TOC above G.L.
+  upstandH: 0.15,
+  chamfer: 0.025,
+  hardstanding: 0.5,
+  recessW: 1.2,
+  recessDepth: 0.3,
+  rhsW: 0.1,               // 100 mm
+  rhsH: 0.05,              // 50 mm
+  rhsLen: 2.58,
+  gratingDepth: 0.038,
+  wallThick: 0.05,
+  doorW: 1.25,
+  doorH: 2.15,
+  doorThick: 0.04,
+  louvreW: 0.55,
+  louvreH: 0.9,
+};
+
+const COLOURS = {
+  darkGreen: 0x1a4d2e,
+  midBrown: 0x6b4423,
+  concrete: 0xb0aea4,
+  concreteDark: 0x8a8880,
+  grating: 0x2d6b3a,
+  steel: 0x8a9aaa,
+  transformer: 0x4a5548,  // grey-green oil tank
+  rmu: 0x3d4f63,          // Schneider/Lucy mid blue-grey
+  rtu: 0xb8a88a,          // beige/cream RTU
+  lvCabinet: 0x8a9098,
+  consumer: 0x9a9a92,
+  ground: 0x3d4a38,
+  hardstand: 0x5a5a52,
+  asphalt: 0x3a3a3a,
+  dangerYellow: 0xf5d031,
+  dangerBlack: 0x1a1a1a,
+};
+
+let enclosureColour = COLOURS.darkGreen;
+let exploded = false;
+let doorAngleDeg = 0;
+
+// ─── Scene setup ───
+const wrap = document.getElementById('canvas-wrap');
+const labelOverlay = document.getElementById('label-overlay');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a222c);
+scene.fog = new THREE.Fog(0x1a222c, 18, 42);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 100);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+wrap.insertBefore(renderer.domElement, labelOverlay);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2;
+controls.maxDistance = 25;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.target.set(0, 1.0, 0);
+
+function setIsoCamera() {
+  camera.position.set(6.2, 4.8, 6.5);
+  controls.target.set(0, 1.0, 0);
+  controls.update();
+}
+setIsoCamera();
+
+// Lights
+const amb = new THREE.AmbientLight(0xb0c0d0, 0.45);
+scene.add(amb);
+const hemi = new THREE.HemisphereLight(0xc8d8e8, 0x3a4a30, 0.35);
+scene.add(hemi);
+const dir = new THREE.DirectionalLight(0xfff5e8, 1.15);
+dir.position.set(6, 12, 5);
+dir.castShadow = true;
+dir.shadow.mapSize.set(2048, 2048);
+dir.shadow.camera.near = 1;
+dir.shadow.camera.far = 30;
+dir.shadow.camera.left = -8;
+dir.shadow.camera.right = 8;
+dir.shadow.camera.top = 8;
+dir.shadow.camera.bottom = -8;
+dir.shadow.bias = -0.0003;
+scene.add(dir);
+const fill = new THREE.DirectionalLight(0x8090a8, 0.3);
+fill.position.set(-4, 4, -3);
+scene.add(fill);
+
+// Groups
+const root = new THREE.Group();
+scene.add(root);
+
+const gGround = new THREE.Group(); gGround.name = 'ground';
+const gFoundation = new THREE.Group(); gFoundation.name = 'foundation';
+const gFlooring = new THREE.Group(); gFlooring.name = 'flooring';
+const gRebar = new THREE.Group(); gRebar.name = 'rebar'; gRebar.visible = false;
+const gEarthing = new THREE.Group(); gEarthing.name = 'earthing'; gEarthing.visible = false;
+const gWalls = new THREE.Group(); gWalls.name = 'walls';
+const gRoof = new THREE.Group(); gRoof.name = 'roof';
+const gDoors = new THREE.Group(); gDoors.name = 'doors';
+const gInterior = new THREE.Group(); gInterior.name = 'interior';
+const gServices = new THREE.Group(); gServices.name = 'services';
+const gPole = new THREE.Group(); gPole.name = 'pole'; gPole.visible = false;
+const gDims = new THREE.Group(); gDims.name = 'dims'; gDims.visible = false;
+const gEnclosureLift = new THREE.Group(); gEnclosureLift.name = 'enclosureLift';
+
+root.add(gGround, gFoundation, gRebar, gEarthing, gFlooring);
+gEnclosureLift.add(gWalls, gRoof, gDoors, gInterior, gServices);
+root.add(gEnclosureLift, gPole, gDims);
+
+// Label targets for CSS overlay
+const labelTargets = [];
+
+function addLabel(text, position, group = 'labels', isDim = false) {
+  const el = document.createElement('div');
+  el.className = 'css-label' + (isDim ? ' dim' : '');
+  el.textContent = text;
+  el.dataset.group = group;
+  labelOverlay.appendChild(el);
+  const obj = new THREE.Object3D();
+  obj.position.copy(position);
+  scene.add(obj);
+  labelTargets.push({ el, obj, group, isDim });
+}
+
+// ─── Materials (mutable colour refs) ───
+const matEnclosure = new THREE.MeshStandardMaterial({
+  color: enclosureColour, roughness: 0.55, metalness: 0.08, roughnessMap: null
+});
+const matConcrete = new THREE.MeshStandardMaterial({
+  color: COLOURS.concrete, roughness: 0.85, metalness: 0.02
+});
+const matConcreteDark = new THREE.MeshStandardMaterial({
+  color: COLOURS.concreteDark, roughness: 0.88, metalness: 0.02
+});
+const matGrating = new THREE.MeshStandardMaterial({
+  color: COLOURS.grating, roughness: 0.7, metalness: 0.05,
+  transparent: true, opacity: 0.72, side: THREE.DoubleSide
+});
+const matSteel = new THREE.MeshStandardMaterial({
+  color: COLOURS.steel, roughness: 0.35, metalness: 0.75
+});
+const matTransformer = new THREE.MeshStandardMaterial({
+  color: COLOURS.transformer, roughness: 0.5, metalness: 0.3
+});
+const matRMU = new THREE.MeshStandardMaterial({
+  color: COLOURS.rmu, roughness: 0.45, metalness: 0.25
+});
+const matRTU = new THREE.MeshStandardMaterial({
+  color: COLOURS.rtu, roughness: 0.5, metalness: 0.15
+});
+const matGround = new THREE.MeshStandardMaterial({
+  color: COLOURS.ground, roughness: 0.95, metalness: 0
+});
+const matHardstand = new THREE.MeshStandardMaterial({
+  color: COLOURS.hardstand, roughness: 0.9, metalness: 0.05
+});
+const matAsphalt = new THREE.MeshStandardMaterial({
+  color: COLOURS.asphalt, roughness: 0.92, metalness: 0.02
+});
+
+const matRebar = new THREE.MeshStandardMaterial({
+  color: 0xc45a20, roughness: 0.55, metalness: 0.45,
+  emissive: 0x3a1508, emissiveIntensity: 0.35,
+  transparent: true, opacity: 0.88
+});
+const matCopper = new THREE.MeshStandardMaterial({
+  color: 0xb87333, roughness: 0.4, metalness: 0.8
+});
+const matCopperTape = new THREE.MeshStandardMaterial({
+  color: 0x3a8f5c, roughness: 0.45, metalness: 0.65,
+  emissive: 0x0a2a14, emissiveIntensity: 0.2
+});
+const matEarthRod = new THREE.MeshStandardMaterial({
+  color: 0xd4782a, roughness: 0.4, metalness: 0.75
+});
+const matConn = new THREE.MeshStandardMaterial({
+  color: 0xcc2222, roughness: 0.4, metalness: 0.3,
+  emissive: 0x660000, emissiveIntensity: 0.55
+});
+const matLedEmit = new THREE.MeshStandardMaterial({
+  color: 0xfff8e8, roughness: 0.3, metalness: 0.05,
+  emissive: 0xfff0c8, emissiveIntensity: 0.95
+});
+
+
+function mesh(geo, mat, opts = {}) {
+  const m = new THREE.Mesh(geo, mat);
+  m.castShadow = opts.cast !== false;
+  m.receiveShadow = opts.recv !== false;
+  if (opts.pos) m.position.copy(opts.pos);
+  if (opts.rot) m.rotation.set(opts.rot.x || 0, opts.rot.y || 0, opts.rot.z || 0);
+  return m;
+}
+
+// ─── Ground context ───
+function buildGround() {
+  // Large grass/ground plane
+  const ground = mesh(
+    new THREE.PlaneGeometry(20, 20),
+    matGround,
+    { cast: false, pos: new THREE.Vector3(0, 0, 0), rot: { x: -Math.PI / 2 } }
+  );
+  gGround.add(ground);
+
+  // Grid helper subtle
+  const grid = new THREE.GridHelper(16, 16, 0x4a5a48, 0x354038);
+  grid.position.y = 0.002;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.35;
+  gGround.add(grid);
+
+  // Hardstanding strip ~4m overall (plinth 3m + 0.5m sides/rear; front access zone)
+  // Overall context pad: sides/rear 500mm clear → roughly 4.0 × 4.0 with front apron
+  const hsW = 4.0;
+  const hsD = 4.5; // includes front clear zone indication
+  const hs = mesh(
+    new THREE.BoxGeometry(hsW, 0.04, hsD),
+    matHardstand,
+    { cast: false, pos: new THREE.Vector3(0, 0.02, 0.25) }
+  );
+  gGround.add(hs);
+
+  // Front access asphalt strip (4m × 2m min clear zone indication)
+  const access = mesh(
+    new THREE.BoxGeometry(4.0, 0.035, 2.0),
+    matAsphalt,
+    { cast: false, pos: new THREE.Vector3(0, 0.018, 2.5) }
+  );
+  gGround.add(access);
+}
+
+// ─── Chamfered plinth helper ───
+function createChamferedBox(w, h, d, chamfer, mat) {
+  // Approximate chamfer with main box + slight inset top edge via Extrude or CSG-like layered boxes
+  // Use a shape with chamfered plan for top face visual
+  const group = new THREE.Group();
+  const main = mesh(new THREE.BoxGeometry(w, h - chamfer, d), mat, {
+    pos: new THREE.Vector3(0, (h - chamfer) / 2, 0)
+  });
+  group.add(main);
+  // Top inset slab to suggest chamfer
+  const top = mesh(
+    new THREE.BoxGeometry(w - 2 * chamfer, chamfer, d - 2 * chamfer),
+    mat,
+    { pos: new THREE.Vector3(0, h - chamfer / 2, 0) }
+  );
+  group.add(top);
+  // Chamfer edge strips (bevel approximation)
+  const edgeMat = mat.clone();
+  edgeMat.color = edgeMat.color.clone().multiplyScalar(0.92);
+  const bevels = [
+    { w: w - 2 * chamfer, h: chamfer * 1.42, d: chamfer * 1.42, x: 0, z: d / 2 - chamfer / 2, rx: Math.PI / 4 },
+    { w: w - 2 * chamfer, h: chamfer * 1.42, d: chamfer * 1.42, x: 0, z: -(d / 2 - chamfer / 2), rx: Math.PI / 4 },
+    { w: chamfer * 1.42, h: chamfer * 1.42, d: d - 2 * chamfer, x: w / 2 - chamfer / 2, z: 0, rz: Math.PI / 4 },
+    { w: chamfer * 1.42, h: chamfer * 1.42, d: d - 2 * chamfer, x: -(w / 2 - chamfer / 2), z: 0, rz: Math.PI / 4 },
+  ];
+  for (const b of bevels) {
+    const geo = new THREE.BoxGeometry(b.w, b.h, b.d);
+    const m = mesh(geo, edgeMat, {
+      pos: new THREE.Vector3(b.x, h - chamfer, b.z),
+      rot: { x: b.rx || 0, z: b.rz || 0 }
+    });
+    group.add(m);
+  }
+  return group;
+}
+
+// ─── Foundation ───
+function buildFoundation() {
+  const y0 = 0; // G.L.
+  const toc = D.plinthH; // 0.15
+
+  // Perimeter ring beam / slab with central recess
+  // Build as outer shell: full plinth volume minus recess void
+  // Outer solid ring: four slabs around recess
+
+  const ringOuterW = D.plinthW;
+  const ringOuterD = D.plinthD;
+  const recessW = D.recessW;
+  const slabTop = toc;
+  const recessBottom = toc - D.recessDepth; // -0.15 relative to TOC → -0.15 below GL for deep part
+  // Recess is ~0.3m deep under transformer area from TOC
+  // Ring beam thickness below TOC: show substantial foundation mass
+
+  // Visible plinth top surface at TOC with upstand look
+  // Left ledge
+  const ledgeW = (ringOuterW - recessW) / 2; // 0.9 m each side
+  const leftLedge = mesh(
+    new THREE.BoxGeometry(ledgeW, D.plinthH + 0.15, ringOuterD),
+    matConcrete,
+    { pos: new THREE.Vector3(-(recessW / 2 + ledgeW / 2), (D.plinthH + 0.15) / 2 - 0.15, 0) }
+  );
+  // Shift so top is at TOC=0.15: centre Y = toc/2 for simple, but we want mass below
+  // Rebuild more carefully:
+
+  gFoundation.clear();
+
+  // Foundation mass extending below GL
+  const foundDepth = 0.6; // visible underground depth for clarity
+  const foundTop = toc; // 0.15
+
+  // Create ring beam as four walls + floor of recess
+  function addRingPart(w, h, d, x, y, z) {
+    const m = mesh(new THREE.BoxGeometry(w, h, d), matConcrete, {
+      pos: new THREE.Vector3(x, y, z)
+    });
+    gFoundation.add(m);
+  }
+
+  // Left wall of ring (along Z)
+  addRingPart(ledgeW, foundDepth + toc, ringOuterD,
+    -(recessW / 2 + ledgeW / 2), (foundDepth + toc) / 2 - foundDepth, 0);
+  // Right wall
+  addRingPart(ledgeW, foundDepth + toc, ringOuterD,
+    (recessW / 2 + ledgeW / 2), (foundDepth + toc) / 2 - foundDepth, 0);
+
+  // Front cross-beam (across recess at front)
+  const beamThick = 0.3; // front-back thickness of end beams
+  addRingPart(recessW, foundDepth + toc, beamThick,
+    0, (foundDepth + toc) / 2 - foundDepth, (ringOuterD / 2 - beamThick / 2));
+  // Rear cross-beam
+  addRingPart(recessW, foundDepth + toc, beamThick,
+    0, (foundDepth + toc) / 2 - foundDepth, -(ringOuterD / 2 - beamThick / 2));
+
+  // Recess floor
+  const recessFloorY = toc - D.recessDepth;
+  addRingPart(recessW, 0.08, ringOuterD - 2 * beamThick,
+    0, recessFloorY - 0.04, 0);
+
+  // Chamfered top edges on outer perimeter (25×25 visual)
+  const chamferedTop = createChamferedBox(ringOuterW, 0.04, ringOuterD, D.chamfer, matConcrete);
+  chamferedTop.position.y = toc - 0.02;
+  gFoundation.add(chamferedTop);
+
+  // Upstand indication: thin raised lip around housing footprint (housing sits on plinth)
+  // Housing is 2.8×2.8 centred on 3.0×3.0 → 100mm reveal each side
+  const reveal = (D.plinthW - D.housingW) / 2; // 0.1
+  // Subtle upstand lip outside housing line
+  const lipH = 0.02;
+  const lipParts = [
+    [D.plinthW, lipH, reveal, 0, toc + lipH / 2, (D.plinthD / 2 - reveal / 2)],
+    [D.plinthW, lipH, reveal, 0, toc + lipH / 2, -(D.plinthD / 2 - reveal / 2)],
+    [reveal, lipH, D.housingD, (D.plinthW / 2 - reveal / 2), toc + lipH / 2, 0],
+    [reveal, lipH, D.housingD, -(D.plinthW / 2 - reveal / 2), toc + lipH / 2, 0],
+  ];
+  for (const [w, h, d, x, y, z] of lipParts) {
+    gFoundation.add(mesh(new THREE.BoxGeometry(w, h, d), matConcreteDark, {
+      pos: new THREE.Vector3(x, y, z), cast: false
+    }));
+  }
+
+    // RHS / UA steel supports moved to Sheet 3 flooring (buildFlooring)
+
+  // Dark recess interior walls for clarity
+  const recessWallMat = matConcreteDark;
+  // Inner faces already formed by ring; add thin dark lining
+  const liningH = D.recessDepth;
+  const liningY = toc - liningH / 2;
+  gFoundation.add(mesh(new THREE.BoxGeometry(0.02, liningH, ringOuterD - 2 * beamThick), recessWallMat, {
+    pos: new THREE.Vector3(-recessW / 2 + 0.01, liningY, 0), cast: false
+  }));
+  gFoundation.add(mesh(new THREE.BoxGeometry(0.02, liningH, ringOuterD - 2 * beamThick), recessWallMat, {
+    pos: new THREE.Vector3(recessW / 2 - 0.01, liningY, 0), cast: false
+  }));
+}
+
+
+
+// ═══════════════════════════════════════════════════════════
+// Sheet 3 — GRP flooring (two 1190×1190×38 panels + UA/RHS)
+// ═══════════════════════════════════════════════════════════
+function buildFlooring() {
+  gFlooring.clear();
+  const toc = D.plinthH;
+  const panelW = 1.19, panelD = 1.19, panelT = D.gratingDepth; // 0.038
+  const totalW = panelW * 2; // 2.38
+  const gy = toc - panelT / 2;
+  // Panels centred on plinth, slightly forward of centre for aisle / cable zone
+  const panelZ = 0.05;
+
+  const barMat = new THREE.MeshStandardMaterial({
+    color: 0x246334, roughness: 0.65, metalness: 0.08
+  });
+  const gritMat = matGrating;
+
+  function makePanel(cx, cz) {
+    const g = new THREE.Group();
+    // Perimeter frame
+    g.add(mesh(new THREE.BoxGeometry(panelW, panelT, panelD), gritMat, {
+      pos: new THREE.Vector3(cx, gy, cz), cast: false
+    }));
+    // Main bars (along Z) ~38 mm pitch
+    const pitch = 0.038;
+    for (let x = -panelW / 2 + pitch; x < panelW / 2 - pitch * 0.5; x += pitch) {
+      g.add(mesh(new THREE.BoxGeometry(0.008, panelT + 0.002, panelD - 0.02), barMat, {
+        pos: new THREE.Vector3(cx + x, gy, cz), cast: false
+      }));
+    }
+    // Short bars (along X) ~every 2 pitches
+    for (let z = -panelD / 2 + pitch * 1.5; z < panelD / 2 - pitch; z += pitch * 2) {
+      g.add(mesh(new THREE.BoxGeometry(panelW - 0.02, panelT + 0.001, 0.008), barMat, {
+        pos: new THREE.Vector3(cx, gy, cz + z), cast: false
+      }));
+    }
+    return g;
+  }
+
+  gFlooring.add(makePanel(-panelW / 2, panelZ));
+  gFlooring.add(makePanel(panelW / 2, panelZ));
+
+  // Cable cut-outs (Detail A) — rectangular openings near LV/RMU cable stubs
+  const cutMat = new THREE.MeshStandardMaterial({
+    color: 0x1a1a18, roughness: 0.9, metalness: 0.05
+  });
+  const cutouts = [
+    { x: -0.35, z: 0.35, w: 0.22, d: 0.18 }, // LV side
+    { x: 0.35, z: 0.42, w: 0.22, d: 0.18 },  // RMU side
+  ];
+  cutouts.forEach(c => {
+    // Dark void plate slightly below grating top
+    gFlooring.add(mesh(new THREE.BoxGeometry(c.w, panelT * 0.6, c.d), cutMat, {
+      pos: new THREE.Vector3(c.x, gy - 0.005, c.z + panelZ), cast: false
+    }));
+    // Rising cable stubs through cut-out
+    for (let i = 0; i < 3; i++) {
+      gFlooring.add(mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.28, 8), new THREE.MeshStandardMaterial({
+        color: 0x2a2a28, roughness: 0.7, metalness: 0.15
+      }), {
+        pos: new THREE.Vector3(c.x - 0.05 + i * 0.05, toc - 0.12, c.z + panelZ)
+      }));
+    }
+  });
+
+  // UA 65×50×6 at front & rear edges of panels — length 2.36 m along X
+  // Approximate unequal angle as L-section (two plates)
+  const uaLen = 2.36, uaA = 0.065, uaB = 0.050, uaT = 0.006;
+  const uaY = toc - panelT - uaA / 2;
+  const frontZ = panelZ + panelD / 2;
+  const rearZ = panelZ - panelD / 2;
+
+  function makeUA(z) {
+    const g = new THREE.Group();
+    // Vertical leg
+    g.add(mesh(new THREE.BoxGeometry(uaLen, uaA, uaT), matSteel, {
+      pos: new THREE.Vector3(0, uaY, z)
+    }));
+    // Horizontal leg
+    g.add(mesh(new THREE.BoxGeometry(uaLen, uaT, uaB), matSteel, {
+      pos: new THREE.Vector3(0, uaY - uaA / 2 + uaT / 2, z + (z > panelZ ? uaB / 2 : -uaB / 2))
+    }));
+    // Slotted hole hint — 7 holes, 180 then 400 centres (Sheet 3)
+    // Positions from end: 180, then 5×400, then 180 → centres at cumulative
+    const centres = [];
+    let pos = -uaLen / 2 + 0.180;
+    centres.push(pos);
+    for (let i = 0; i < 5; i++) { pos += 0.400; centres.push(pos); }
+    centres.forEach(hx => {
+      g.add(mesh(new THREE.BoxGeometry(0.028, 0.014, uaT + 0.004), new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a, roughness: 0.8, metalness: 0.2
+      }), {
+        pos: new THREE.Vector3(hx, uaY + 0.01, z), cast: false
+      }));
+    });
+    return g;
+  }
+  gFlooring.add(makeUA(frontZ));
+  gFlooring.add(makeUA(rearZ));
+
+  // RHS 100×50×6 central beam ~2.59 m along X
+  const rhsLen = 2.59, rhsW = 0.100, rhsH = 0.050;
+  const rhsY = toc - panelT - rhsH / 2;
+  // Hollow look: outer box + dark inner void hint
+  gFlooring.add(mesh(new THREE.BoxGeometry(rhsLen, rhsH, rhsW), matSteel, {
+    pos: new THREE.Vector3(0, rhsY, panelZ)
+  }));
+  gFlooring.add(mesh(new THREE.BoxGeometry(rhsLen - 0.02, rhsH - 0.012, rhsW - 0.012), new THREE.MeshStandardMaterial({
+    color: 0x2a3038, roughness: 0.7, metalness: 0.4
+  }), {
+    pos: new THREE.Vector3(0, rhsY, panelZ), cast: false
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════
+// Sheet 2 — Concrete reinforcement (gRebar, OFF by default)
+// ═══════════════════════════════════════════════════════════
+function buildRebar() {
+  gRebar.clear();
+  const toc = D.plinthH;
+  const cover = 0.05;
+  const barR = 0.006; // visual H12
+  const linkR = 0.005; // H10
+  const mat = matRebar;
+
+  function barX(x0, x1, y, z) {
+    const len = Math.abs(x1 - x0);
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR, barR, len, 5), mat, {
+      pos: new THREE.Vector3((x0 + x1) / 2, y, z),
+      rot: { z: Math.PI / 2 }, cast: false
+    }));
+  }
+  function barZ(z0, z1, y, x) {
+    const len = Math.abs(z1 - z0);
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR, barR, len, 5), mat, {
+      pos: new THREE.Vector3(x, y, (z0 + z1) / 2),
+      rot: { x: Math.PI / 2 }, cast: false
+    }));
+  }
+  function barY(y0, y1, x, z) {
+    const len = Math.abs(y1 - y0);
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR, barR, len, 5), mat, {
+      pos: new THREE.Vector3(x, (y0 + y1) / 2, z), cast: false
+    }));
+  }
+
+  // Top A393 mesh 2.85 × 1.40 — near TOC with cover
+  const topY = toc - cover;
+  const tw = 2.85, td = 1.40;
+  const pitch = 0.2; // A393 ~200 mm centres
+  for (let x = -tw / 2; x <= tw / 2 + 0.001; x += pitch) {
+    barZ(-td / 2, td / 2, topY, x);
+  }
+  for (let z = -td / 2; z <= td / 2 + 0.001; z += pitch) {
+    barX(-tw / 2, tw / 2, topY, z);
+  }
+
+  // Bottom A393 mesh 2.85 × 1.00 — lower in foundation
+  const botY = toc - D.recessDepth + cover; // ~ -0.1
+  const bw = 2.85, bd = 1.00;
+  for (let x = -bw / 2; x <= bw / 2 + 0.001; x += pitch) {
+    barZ(-bd / 2, bd / 2, botY, x);
+  }
+  for (let z = -bd / 2; z <= bd / 2 + 0.001; z += pitch) {
+    barX(-bw / 2, bw / 2, botY + 0.01, z);
+  }
+
+  // Ground beams: front + left/right side cages — H12 longs + H10 links
+  function beamCage(cx, cz, lenX, lenZ, alongX) {
+    const yTop = toc - cover - 0.02;
+    const yBot = toc - 0.45;
+    const linkPitch = 0.4;
+    if (alongX) {
+      // Longitudinal bars along X (4 H12 T&B → 2 top + 2 bot visual)
+      [-0.08, 0.08].forEach(dz => {
+        barX(cx - lenX / 2, cx + lenX / 2, yTop, cz + dz);
+        barX(cx - lenX / 2, cx + lenX / 2, yBot, cz + dz);
+      });
+      // H10 links
+      for (let x = cx - lenX / 2 + 0.1; x < cx + lenX / 2; x += linkPitch) {
+        // rectangular stirrup
+        barZ(cz - 0.1, cz + 0.1, yTop, x);
+        barZ(cz - 0.1, cz + 0.1, yBot, x);
+        barY(yBot, yTop, x, cz - 0.1);
+        barY(yBot, yTop, x, cz + 0.1);
+      }
+    } else {
+      [-0.08, 0.08].forEach(dx => {
+        barZ(cz - lenZ / 2, cz + lenZ / 2, yTop, cx + dx);
+        barZ(cz - lenZ / 2, cz + lenZ / 2, yBot, cx + dx);
+      });
+      for (let z = cz - lenZ / 2 + 0.1; z < cz + lenZ / 2; z += linkPitch) {
+        barX(cx - 0.1, cx + 0.1, yTop, z);
+        barX(cx - 0.1, cx + 0.1, yBot, z);
+        barY(yBot, yTop, cx - 0.1, z);
+        barY(yBot, yTop, cx + 0.1, z);
+      }
+    }
+  }
+  // Front ground beam (across +Z)
+  beamCage(0, D.plinthD / 2 - 0.25, 2.6, 0.3, true);
+  // Side ground beams
+  beamCage(-D.plinthW / 2 + 0.25, 0, 0.3, 2.4, false);
+  beamCage(D.plinthW / 2 - 0.25, 0, 0.3, 2.4, false);
+
+  // Distinct running lines for bars 01 / 02 / 03 (approximate)
+  // 01: H12 × 12 × 2850 straight — already in mesh longs; add accent colour lines
+  const mat01 = mat.clone(); mat01.color = new THREE.Color(0xd4782a); mat01.emissive = new THREE.Color(0x3a1508);
+  const mat02 = mat.clone(); mat02.color = new THREE.Color(0xe09040);
+  const mat03 = mat.clone(); mat03.color = new THREE.Color(0xa84818);
+  // Bar 02 L-shape (2No) — approximate at rear corners
+  [[-1.2, -1.2], [1.2, -1.2]].forEach(([x, z]) => {
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR * 1.2, barR * 1.2, 1.715, 5), mat02, {
+      pos: new THREE.Vector3(x, topY - 0.02, z + 0.85), rot: { x: Math.PI / 2 }, cast: false
+    }));
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR * 1.2, barR * 1.2, 0.665, 5), mat02, {
+      pos: new THREE.Vector3(x, topY - 0.35, z), cast: false
+    }));
+  });
+  // Bar 03 L-shapes near recess edges
+  [[-0.7, 0.8], [0.7, 0.8], [-0.7, -0.8], [0.7, -0.8]].forEach(([x, z]) => {
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR * 1.1, barR * 1.1, 0.665, 5), mat03, {
+      pos: new THREE.Vector3(x, topY - 0.02, z), rot: { z: Math.PI / 2 }, cast: false
+    }));
+    gRebar.add(mesh(new THREE.CylinderGeometry(barR * 1.1, barR * 1.1, 0.665, 5), mat03, {
+      pos: new THREE.Vector3(x, topY - 0.35, z), cast: false
+    }));
+  });
+
+  // Earth bond point on top mesh (red)
+  gRebar.add(mesh(new THREE.SphereGeometry(0.04, 10, 8), matConn, {
+    pos: new THREE.Vector3(0.4, topY + 0.03, 0.15), cast: false
+  }));
+  gRebar.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.08, 6), matConn, {
+    pos: new THREE.Vector3(0.4, topY + 0.07, 0.15), cast: false
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════
+// Sheet 4 — Earthing (gEarthing)
+// ═══════════════════════════════════════════════════════════
+function buildEarthing() {
+  gEarthing.clear();
+  const toc = D.plinthH;
+  const rodDepth = 2.4;
+  const ringY = -0.6;
+  const half = D.plinthW / 2; // 1.5
+
+  // 4 earth rods at plinth corners
+  const corners = [
+    [-half + 0.08, -half + 0.08],
+    [half - 0.08, -half + 0.08],
+    [-half + 0.08, half - 0.08],
+    [half - 0.08, half - 0.08],
+  ];
+  corners.forEach(([x, z]) => {
+    gEarthing.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, rodDepth, 8), matEarthRod, {
+      pos: new THREE.Vector3(x, -rodDepth / 2, z), cast: false
+    }));
+    // Cap at foundation level
+    gEarthing.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.03, 8), matCopper, {
+      pos: new THREE.Vector3(x, 0.02, z), cast: false
+    }));
+  });
+
+  // Earth ring electrode encircling foundation, 0.6 m below GL
+  const ringHalf = half + 0.15;
+  const segs = 32;
+  for (let i = 0; i < segs; i++) {
+    const a0 = (i / segs) * Math.PI * 2;
+    const a1 = ((i + 1) / segs) * Math.PI * 2;
+    const x0 = Math.cos(a0) * ringHalf, z0 = Math.sin(a0) * ringHalf;
+    const x1 = Math.cos(a1) * ringHalf, z1 = Math.sin(a1) * ringHalf;
+    const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
+    const len = Math.hypot(x1 - x0, z1 - z0);
+    const ang = Math.atan2(z1 - z0, x1 - x0);
+    gEarthing.add(mesh(new THREE.CylinderGeometry(0.01, 0.01, len, 5), matCopperTape, {
+      pos: new THREE.Vector3(mx, ringY, mz),
+      rot: { y: -ang, z: Math.PI / 2 }, cast: false
+    }));
+  }
+
+  // 10-way earth bar on RIGHT interior — foundation face / right wall
+  // Sheet 4: attached to foundation 190 mm below FFL
+  const barX = D.housingW / 2 - D.wallThick - 0.06;
+  const barY = toc - 0.19;
+  const barZ = 0.35;
+  const barW = 0.02, barH = 0.04, barL = 0.42;
+  gEarthing.add(mesh(new THREE.BoxGeometry(barW, barH, barL), matCopper, {
+    pos: new THREE.Vector3(barX, barY, barZ)
+  }));
+  // Insulators
+  for (let i = 0; i < 2; i++) {
+    gEarthing.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.03, 8), new THREE.MeshStandardMaterial({
+      color: 0xe8e0d0, roughness: 0.5, metalness: 0.1
+    }), {
+      pos: new THREE.Vector3(barX + 0.025, barY, barZ - 0.12 + i * 0.24),
+      rot: { z: Math.PI / 2 }, cast: false
+    }));
+  }
+  // 10 way studs
+  for (let i = 0; i < 10; i++) {
+    const zz = barZ - barL / 2 + 0.025 + i * (barL - 0.05) / 9;
+    gEarthing.add(mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.02, 6), matSteel, {
+      pos: new THREE.Vector3(barX - 0.015, barY, zz),
+      rot: { z: Math.PI / 2 }, cast: false
+    }));
+  }
+
+  // Connection markers (red squares) + segmented copper tape runs
+  function dashedRun(points) {
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i], b = points[i + 1];
+      const mid = a.clone().add(b).multiplyScalar(0.5);
+      const len = a.distanceTo(b);
+      // dashed: alternate visible segments
+      const n = Math.max(2, Math.floor(len / 0.08));
+      for (let s = 0; s < n; s += 2) {
+        const t0 = s / n, t1 = Math.min(1, (s + 1) / n);
+        const p0 = a.clone().lerp(b, t0);
+        const p1 = a.clone().lerp(b, t1);
+        const m = p0.clone().add(p1).multiplyScalar(0.5);
+        const segLen = p0.distanceTo(p1);
+        const dir = p1.clone().sub(p0);
+        const g = new THREE.CylinderGeometry(0.006, 0.006, segLen, 4);
+        const meshObj = mesh(g, matCopperTape, { pos: m, cast: false });
+        meshObj.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          dir.clone().normalize()
+        );
+        gEarthing.add(meshObj);
+      }
+    }
+  }
+  function connMarker(p) {
+    gEarthing.add(mesh(new THREE.BoxGeometry(0.05, 0.05, 0.05), matConn, {
+      pos: p, cast: false
+    }));
+  }
+
+  const barPt = new THREE.Vector3(barX - 0.05, barY, barZ);
+  // Connections to: LV, RMU, RTU, DB, rebar, earth rods, earth ring
+  const targets = [
+    new THREE.Vector3(-0.32, toc + 0.3, 0.25),  // LV
+    new THREE.Vector3(0.33, toc + 0.3, 0.35),   // RMU
+    new THREE.Vector3(-1.20, toc + 0.6, 0.45),  // RTU
+    new THREE.Vector3(-1.25, toc + 1.0, -0.2),  // DB / services
+    new THREE.Vector3(0.4, toc - 0.02, 0.15),   // rebar bond
+    new THREE.Vector3(half - 0.08, 0.05, half - 0.08), // earth rod
+    new THREE.Vector3(ringHalf * 0.7, ringY, ringHalf * 0.7), // ring
+  ];
+  targets.forEach(t => {
+    connMarker(t);
+    dashedRun([barPt.clone(), new THREE.Vector3(barX - 0.1, t.y * 0.5 + barY * 0.5, t.z), t]);
+  });
+  // Bond from top rebar to earth system
+  dashedRun([
+    new THREE.Vector3(0.4, toc - 0.02, 0.15),
+    new THREE.Vector3(0.8, toc - 0.1, 0.2),
+    barPt.clone()
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════
+// Sheet 5 — Small power & lighting (gServices, ON by default)
+// Left interior wall (−X)
+// ═══════════════════════════════════════════════════════════
+function buildServices() {
+  gServices.clear();
+  // Remove any previous service lights from scene
+  scene.children.filter(c => c.userData && c.userData.serviceLight).forEach(c => scene.remove(c));
+
+  const toc = D.plinthH;
+  const wallX = -D.housingW / 2 + D.wallThick + 0.02; // just inside left wall
+  const matPink = new THREE.MeshStandardMaterial({
+    color: 0xe070a0, roughness: 0.45, metalness: 0.15, emissive: 0x401028, emissiveIntensity: 0.25
+  });
+  const matWhite = new THREE.MeshStandardMaterial({
+    color: 0xf0f0ec, roughness: 0.4, metalness: 0.1
+  });
+  const matSteel = new THREE.MeshStandardMaterial({
+    color: 0x8a9098, roughness: 0.4, metalness: 0.55
+  });
+
+  // 2× 1500 mm twin LED wall lights at 1.8 m AFFL along left wall
+  // Place to light LV/RMU/aisle — spaced along wall (avoid shadows when doors open)
+  const ledY = toc + 1.80;
+  const ledPositions = [
+    { z: -0.55 }, // rearward — lights transformer/LV area
+    { z: 0.65 },  // forward — lights aisle / RMU approach
+  ];
+  ledPositions.forEach((lp, idx) => {
+    const g = new THREE.Group();
+    // Fitting body
+    g.add(mesh(new THREE.BoxGeometry(0.08, 0.06, 1.50), matPink, {
+      pos: new THREE.Vector3(wallX + 0.04, ledY, lp.z)
+    }));
+    // Twin LED tubes (emissive)
+    [-0.02, 0.02].forEach(oy => {
+      g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.40, 8), matLedEmit, {
+        pos: new THREE.Vector3(wallX + 0.07, ledY + oy, lp.z),
+        rot: { x: Math.PI / 2 }, cast: false
+      }));
+    });
+    gServices.add(g);
+    // Soft point light parented conceptually — add to scene with flag
+    const pl = new THREE.PointLight(0xfff0d0, 0.55, 4.5, 2);
+    pl.position.set(wallX + 0.25, ledY - 0.05, lp.z);
+    pl.userData.serviceLight = true;
+    pl.castShadow = false;
+    scene.add(pl);
+    g.userData.light = pl;
+  });
+
+  // Light switch at 1.2–1.4 m AFFL near doors (front of left wall)
+  const swY = toc + 1.30;
+  gServices.add(mesh(new THREE.BoxGeometry(0.04, 0.08, 0.08), matPink, {
+    pos: new THREE.Vector3(wallX + 0.03, swY, 1.15)
+  }));
+  gServices.add(mesh(new THREE.BoxGeometry(0.02, 0.03, 0.025), matWhite, {
+    pos: new THREE.Vector3(wallX + 0.05, swY, 1.15), cast: false
+  }));
+
+  // 13A switched double socket — mid-front left wall ~0.8 m AFFL
+  const sockY = toc + 0.80;
+  gServices.add(mesh(new THREE.BoxGeometry(0.05, 0.09, 0.14), matPink, {
+    pos: new THREE.Vector3(wallX + 0.03, sockY, 0.85)
+  }));
+  // Two socket faces
+  [-0.03, 0.03].forEach(oz => {
+    gServices.add(mesh(new THREE.BoxGeometry(0.01, 0.05, 0.045), matWhite, {
+      pos: new THREE.Vector3(wallX + 0.055, sockY, 0.85 + oz), cast: false
+    }));
+  });
+
+  // 13A unswitched FCU for RTU — adjacent to RTU
+  const fcuY = toc + 0.90;
+  gServices.add(mesh(new THREE.BoxGeometry(0.05, 0.08, 0.08), matPink, {
+    pos: new THREE.Vector3(wallX + 0.03, fcuY, 0.45)
+  }));
+  gServices.add(mesh(new THREE.BoxGeometry(0.01, 0.03, 0.04), matWhite, {
+    pos: new THREE.Vector3(wallX + 0.055, fcuY + 0.01, 0.45), cast: false
+  }));
+
+  // Distribution board on left wall near RTU — 1400 mm AFFL (Sheet 5)
+  // Triangle/board body — replaces or sits with consumer unit
+  const dbY = toc + 1.40;
+  const dbZ = -0.15; // near RTU toward rear of left wall
+  const dbG = new THREE.Group();
+  dbG.name = 'distributionBoard';
+  // Board body
+  dbG.add(mesh(new THREE.BoxGeometry(0.14, 0.40, 0.28), matPink, {
+    pos: new THREE.Vector3(wallX + 0.08, dbY, dbZ)
+  }));
+  // Door / face toward aisle
+  dbG.add(mesh(new THREE.BoxGeometry(0.01, 0.36, 0.24), matWhite, {
+    pos: new THREE.Vector3(wallX + 0.15, dbY, dbZ), cast: false
+  }));
+  // DIN ways hint
+  for (let i = 0; i < 6; i++) {
+    dbG.add(mesh(new THREE.BoxGeometry(0.008, 0.18, 0.028), new THREE.MeshStandardMaterial({
+      color: 0x333333, roughness: 0.5, metalness: 0.2
+    }), {
+      pos: new THREE.Vector3(wallX + 0.16, dbY, dbZ - 0.1 + i * 0.036), cast: false
+    }));
+  }
+  // Triangle marker on top (Sheet 5 legend symbol)
+  const tri = new THREE.ConeGeometry(0.06, 0.08, 3);
+  const triMesh = mesh(tri, matPink, {
+    pos: new THREE.Vector3(wallX + 0.08, dbY + 0.28, dbZ),
+    rot: { y: Math.PI / 2 }, cast: false
+  });
+  dbG.add(triMesh);
+  gServices.add(dbG);
+
+  // Cable tray / containment — two parallel runs along inside of front wall
+  const frontZ = D.housingD / 2 - D.wallThick - 0.08;
+  const trayY = toc + 2.05;
+  const trayLen = D.housingW - 0.2;
+  [0, -0.06].forEach((yOff, i) => {
+    gServices.add(mesh(new THREE.BoxGeometry(trayLen, 0.025, 0.08), matSteel, {
+      pos: new THREE.Vector3(0, trayY + yOff, frontZ - i * 0.1)
+    }));
+    // Side rails
+    gServices.add(mesh(new THREE.BoxGeometry(trayLen, 0.04, 0.008), matSteel, {
+      pos: new THREE.Vector3(0, trayY + yOff + 0.01, frontZ - i * 0.1 + 0.036), cast: false
+    }));
+    gServices.add(mesh(new THREE.BoxGeometry(trayLen, 0.04, 0.008), matSteel, {
+      pos: new THREE.Vector3(0, trayY + yOff + 0.01, frontZ - i * 0.1 - 0.036), cast: false
+    }));
+  });
+  // Drop from tray to left-wall services
+  gServices.add(mesh(new THREE.BoxGeometry(0.04, 0.5, 0.04), matSteel, {
+    pos: new THREE.Vector3(wallX + 0.1, trayY - 0.25, frontZ - 0.05), cast: false
+  }));
+}
+
+
+
+function createLouvrePanel(w, h, colourMat) {
+  const g = new THREE.Group();
+  // Back plate (darker, recessed)
+  const back = mesh(
+    new THREE.BoxGeometry(w, h, 0.015),
+    new THREE.MeshStandardMaterial({ color: 0x0d2818, roughness: 0.7, metalness: 0.1 }),
+    { cast: false }
+  );
+  g.add(back);
+  // Frame
+  const frameMat = colourMat;
+  const ft = 0.03;
+  // slats
+  const slatCount = 9;
+  const slatH = 0.035;
+  const gap = (h - 0.08) / slatCount;
+  const slatMat = new THREE.MeshStandardMaterial({
+    color: colourMat.color.clone().multiplyScalar(0.75),
+    roughness: 0.55, metalness: 0.1
+  });
+  for (let i = 0; i < slatCount; i++) {
+    const y = -h / 2 + 0.05 + i * gap + gap / 2;
+    const slat = mesh(
+      new THREE.BoxGeometry(w - 0.06, slatH, 0.04),
+      slatMat,
+      { pos: new THREE.Vector3(0, y, 0.02), rot: { x: -0.45 }, cast: false }
+    );
+    g.add(slat);
+  }
+  // Outer frame border
+  const borders = [
+    [w, ft, 0.025, 0, h / 2 - ft / 2, 0.01],
+    [w, ft, 0.025, 0, -(h / 2 - ft / 2), 0.01],
+    [ft, h, 0.025, w / 2 - ft / 2, 0, 0.01],
+    [ft, h, 0.025, -(w / 2 - ft / 2), 0, 0.01],
+  ];
+  for (const [bw, bh, bd, bx, by, bz] of borders) {
+    g.add(mesh(new THREE.BoxGeometry(bw, bh, bd), frameMat, {
+      pos: new THREE.Vector3(bx, by, bz), cast: false
+    }));
+  }
+  return g;
+}
+
+// ─── Danger of Death sign ───
+function createDangerSign() {
+  const g = new THREE.Group();
+  const w = 0.28, h = 0.38;
+  // Yellow board
+  const board = mesh(
+    new THREE.BoxGeometry(w, h, 0.008),
+    new THREE.MeshStandardMaterial({ color: COLOURS.dangerYellow, roughness: 0.6, metalness: 0.05 }),
+    { cast: false }
+  );
+  g.add(board);
+  // Black triangle (approx with thin boxes / shape)
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 348;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f5d031';
+  ctx.fillRect(0, 0, 256, 348);
+  // Triangle
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.moveTo(128, 28);
+  ctx.lineTo(228, 200);
+  ctx.lineTo(28, 200);
+  ctx.closePath();
+  ctx.fill();
+  // Lightning bolt
+  ctx.fillStyle = '#f5d031';
+  ctx.beginPath();
+  ctx.moveTo(145, 55);
+  ctx.lineTo(105, 120);
+  ctx.lineTo(130, 120);
+  ctx.lineTo(110, 185);
+  ctx.lineTo(160, 105);
+  ctx.lineTo(135, 105);
+  ctx.closePath();
+  ctx.fill();
+  // Text
+  ctx.fillStyle = '#1a1a1a';
+  ctx.font = 'bold 22px Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('DANGER', 128, 240);
+  ctx.fillText('OF DEATH', 128, 268);
+  ctx.font = '14px Arial, sans-serif';
+  ctx.fillText('In an emergency', 128, 300);
+  ctx.fillText('telephone', 128, 318);
+  ctx.font = 'bold 16px Arial, sans-serif';
+  ctx.fillText('0800 96 9960', 128, 340);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.encoding = THREE.sRGBEncoding;
+  const signFace = mesh(
+    new THREE.PlaneGeometry(w * 0.92, h * 0.92),
+    new THREE.MeshBasicMaterial({ map: tex }),
+    { cast: false, pos: new THREE.Vector3(0, 0, 0.005) }
+  );
+  g.add(signFace);
+  return g;
+}
+
+// ─── Walls ───
+function buildWalls() {
+  gWalls.clear();
+  const toc = D.plinthH;
+  const hw = D.housingW;
+  const hd = D.housingD;
+  const hh = D.housingH;
+  const t = D.wallThick;
+  const yCentre = toc + hh / 2;
+
+  // Coordinate: front is +Z, housing centred on origin in XZ
+  // Rear wall (-Z)
+  const rear = mesh(
+    new THREE.BoxGeometry(hw, hh, t),
+    matEnclosure,
+    { pos: new THREE.Vector3(0, yCentre, -hd / 2 + t / 2) }
+  );
+  gWalls.add(rear);
+
+  // Left wall (-X)
+  const left = mesh(
+    new THREE.BoxGeometry(t, hh, hd),
+    matEnclosure,
+    { pos: new THREE.Vector3(-hw / 2 + t / 2, yCentre, 0) }
+  );
+  gWalls.add(left);
+
+  // Right wall (+X)
+  const right = mesh(
+    new THREE.BoxGeometry(t, hh, hd),
+    matEnclosure,
+    { pos: new THREE.Vector3(hw / 2 - t / 2, yCentre, 0) }
+  );
+  gWalls.add(right);
+
+  // Front wall: two side panels + header + sill (door opening in centre)
+  const doorOpeningW = D.doorW * 2 + 0.04; // pair of doors + gap
+  const sidePanelW = (hw - doorOpeningW) / 2;
+  // Left front panel
+  gWalls.add(mesh(
+    new THREE.BoxGeometry(sidePanelW, hh, t),
+    matEnclosure,
+    { pos: new THREE.Vector3(-hw / 2 + sidePanelW / 2, yCentre, hd / 2 - t / 2) }
+  ));
+  // Right front panel
+  gWalls.add(mesh(
+    new THREE.BoxGeometry(sidePanelW, hh, t),
+    matEnclosure,
+    { pos: new THREE.Vector3(hw / 2 - sidePanelW / 2, yCentre, hd / 2 - t / 2) }
+  ));
+  // Header above doors
+  const headerH = hh - D.doorH - 0.05;
+  gWalls.add(mesh(
+    new THREE.BoxGeometry(doorOpeningW, headerH, t),
+    matEnclosure,
+    { pos: new THREE.Vector3(0, toc + D.doorH + 0.05 + headerH / 2, hd / 2 - t / 2) }
+  ));
+  // Threshold / sill
+  gWalls.add(mesh(
+    new THREE.BoxGeometry(doorOpeningW, 0.05, t),
+    matEnclosure,
+    { pos: new THREE.Vector3(0, toc + 0.025, hd / 2 - t / 2) }
+  ));
+
+  // Louvres: 2 per Left, Right, Rear — centred on walls
+  const louvreY = toc + hh * 0.48;
+  const louvreSpacing = 0.75;
+
+  function placeLouvres(wall) {
+    for (const off of [-louvreSpacing / 2, louvreSpacing / 2]) {
+      const panel = createLouvrePanel(D.louvreW, D.louvreH, matEnclosure);
+      if (wall === 'rear') {
+        panel.position.set(off, louvreY, -hd / 2 + t + 0.01);
+        panel.rotation.y = Math.PI;
+      } else if (wall === 'left') {
+        panel.position.set(-hw / 2 + t + 0.01, louvreY, off);
+        panel.rotation.y = -Math.PI / 2;
+      } else if (wall === 'right') {
+        panel.position.set(hw / 2 - t - 0.01, louvreY, off);
+        panel.rotation.y = Math.PI / 2;
+      }
+      gWalls.add(panel);
+    }
+  }
+  placeLouvres('rear');
+  placeLouvres('left');
+  placeLouvres('right');
+}
+
+// ─── Roof ───
+function buildRoof() {
+  gRoof.clear();
+  const toc = D.plinthH;
+  const top = toc + D.housingH;
+  const oh = D.roofOverhang; // front & back
+  // Shallow pitch: ridge along X, fall to front and back
+  const roofW = D.housingW + 0.04;
+  const roofD = D.housingD + 2 * oh;
+  const pitchRise = 0.08;
+
+  // Two roof halves (front and back fall)
+  const halfD = roofD / 2;
+  // Use thin boxes rotated slightly
+  const angle = Math.atan2(pitchRise, halfD);
+  const slabThick = 0.05;
+  const slabLen = Math.sqrt(halfD * halfD + pitchRise * pitchRise);
+
+  const roofMat = matEnclosure.clone();
+  roofMat.color = matEnclosure.color.clone().multiplyScalar(0.88);
+
+  // Front half (slopes down toward +Z)
+  const frontHalf = mesh(
+    new THREE.BoxGeometry(roofW, slabThick, slabLen),
+    roofMat,
+    {
+      pos: new THREE.Vector3(0, top + pitchRise / 2, halfD / 2 - oh / 2 + oh * 0.1),
+      rot: { x: angle }
+    }
+  );
+  // Recalculate positions more carefully
+  frontHalf.position.set(0, top + pitchRise / 2 + slabThick / 2, D.housingD / 4);
+  frontHalf.rotation.x = angle;
+  gRoof.add(frontHalf);
+
+  const rearHalf = mesh(
+    new THREE.BoxGeometry(roofW, slabThick, slabLen),
+    roofMat,
+    { cast: true }
+  );
+  rearHalf.position.set(0, top + pitchRise / 2 + slabThick / 2, -D.housingD / 4);
+  rearHalf.rotation.x = -angle;
+  gRoof.add(rearHalf);
+
+  // Ridge cap
+  gRoof.add(mesh(
+    new THREE.BoxGeometry(roofW + 0.02, 0.04, 0.08),
+    roofMat,
+    { pos: new THREE.Vector3(0, top + pitchRise + 0.04, 0) }
+  ));
+
+  // Overhang fascia front & back
+  const fasciaMat = matEnclosure.clone();
+  fasciaMat.color = matEnclosure.color.clone().multiplyScalar(0.7);
+  gRoof.add(mesh(
+    new THREE.BoxGeometry(roofW, 0.1, 0.03),
+    fasciaMat,
+    { pos: new THREE.Vector3(0, top + 0.02, D.housingD / 2 + oh - 0.015) }
+  ));
+  gRoof.add(mesh(
+    new THREE.BoxGeometry(roofW, 0.1, 0.03),
+    fasciaMat,
+    { pos: new THREE.Vector3(0, top + 0.02, -(D.housingD / 2 + oh - 0.015)) }
+  ));
+
+  // Side eaves (flush / minimal overhang)
+  gRoof.add(mesh(
+    new THREE.BoxGeometry(0.03, 0.08, D.housingD),
+    fasciaMat,
+    { pos: new THREE.Vector3(D.housingW / 2 + 0.01, top + 0.02, 0) }
+  ));
+  gRoof.add(mesh(
+    new THREE.BoxGeometry(0.03, 0.08, D.housingD),
+    fasciaMat,
+    { pos: new THREE.Vector3(-(D.housingW / 2 + 0.01), top + 0.02, 0) }
+  ));
+}
+
+// ─── Doors ───
+let leftDoorPivot, rightDoorPivot;
+
+function buildDoors() {
+  gDoors.clear();
+  const toc = D.plinthH;
+  const hw = D.housingW;
+  const hd = D.housingD;
+  const t = D.wallThick;
+  const doorOpeningW = D.doorW * 2 + 0.04;
+  const hingeZ = hd / 2 - t / 2;
+
+  // Left door — hinges at outer (left) edge, opens outward
+  leftDoorPivot = new THREE.Group();
+  const leftHingeX = -doorOpeningW / 2;
+  leftDoorPivot.position.set(leftHingeX, toc + 0.05 + D.doorH / 2, hingeZ);
+
+  const leftDoor = mesh(
+    new THREE.BoxGeometry(D.doorW, D.doorH, D.doorThick),
+    matEnclosure,
+    { pos: new THREE.Vector3(D.doorW / 2, 0, 0) }
+  );
+  leftDoorPivot.add(leftDoor);
+
+  // Door frame detail / handle
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8, roughness: 0.3 });
+  leftDoorPivot.add(mesh(
+    new THREE.BoxGeometry(0.02, 0.18, 0.03),
+    handleMat,
+    { pos: new THREE.Vector3(D.doorW - 0.1, 0, D.doorThick / 2 + 0.015), cast: false }
+  ));
+
+  // Danger sign on left door
+  const sign = createDangerSign();
+  sign.position.set(D.doorW / 2, 0.25, D.doorThick / 2 + 0.006);
+  leftDoorPivot.add(sign);
+
+  gDoors.add(leftDoorPivot);
+
+  // Right door — hinges at outer (right) edge
+  rightDoorPivot = new THREE.Group();
+  const rightHingeX = doorOpeningW / 2;
+  rightDoorPivot.position.set(rightHingeX, toc + 0.05 + D.doorH / 2, hingeZ);
+
+  const rightDoor = mesh(
+    new THREE.BoxGeometry(D.doorW, D.doorH, D.doorThick),
+    matEnclosure,
+    { pos: new THREE.Vector3(-D.doorW / 2, 0, 0) }
+  );
+  rightDoorPivot.add(rightDoor);
+  rightDoorPivot.add(mesh(
+    new THREE.BoxGeometry(0.02, 0.18, 0.03),
+    handleMat,
+    { pos: new THREE.Vector3(-(D.doorW - 0.1), 0, D.doorThick / 2 + 0.015), cast: false }
+  ));
+
+  gDoors.add(rightDoorPivot);
+  applyDoorAngle(doorAngleDeg);
+}
+
+function applyDoorAngle(deg) {
+  doorAngleDeg = deg;
+  const rad = THREE.MathUtils.degToRad(deg);
+  // Left door opens outward (negative Y rotation for left hinge)
+  if (leftDoorPivot) leftDoorPivot.rotation.y = -rad;
+  // Right door opens outward (positive Y rotation)
+  if (rightDoorPivot) rightDoorPivot.rotation.y = rad;
+}
+
+// ─── Interior equipment (unit package — EDS 07-3102_01 Sheet 1 GA) ───
+function buildInterior() {
+  gInterior.clear();
+  const toc = D.plinthH;
+  const floorY = toc;
+
+  // Shared detail materials (reuse globals where colours match)
+  const matTx = matTransformer;
+  const matTxDark = new THREE.MeshStandardMaterial({
+    color: 0x2f3630, roughness: 0.55, metalness: 0.45
+  });
+  const matFins = new THREE.MeshStandardMaterial({
+    color: 0x2a302c, roughness: 0.5, metalness: 0.55
+  });
+  const matGalv = new THREE.MeshStandardMaterial({
+    color: 0xa8b0a4, roughness: 0.4, metalness: 0.7
+  });
+  const matRMUBody = matRMU;
+  const matRMUDoor = new THREE.MeshStandardMaterial({
+    color: 0x526781, roughness: 0.48, metalness: 0.2
+  });
+  const matRMUDark = new THREE.MeshStandardMaterial({
+    color: 0x243240, roughness: 0.45, metalness: 0.3
+  });
+  const matLV = new THREE.MeshStandardMaterial({
+    color: 0x8a9098, roughness: 0.5, metalness: 0.25
+  });
+  const matLVFrame = new THREE.MeshStandardMaterial({
+    color: 0x5a6068, roughness: 0.45, metalness: 0.35
+  });
+  const matRTUBody = matRTU;
+  const matConsumer = new THREE.MeshStandardMaterial({
+    color: 0x9a9a92, roughness: 0.55, metalness: 0.12
+  });
+  const matBlack = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a, roughness: 0.6, metalness: 0.2
+  });
+  const matDanger = new THREE.MeshStandardMaterial({
+    color: COLOURS.dangerYellow, roughness: 0.55, metalness: 0.05
+  });
+  const matCable = new THREE.MeshStandardMaterial({
+    color: 0x3a3a38, roughness: 0.7, metalness: 0.15
+  });
+  const matLedG = new THREE.MeshStandardMaterial({
+    color: 0x22cc44, emissive: 0x116622, emissiveIntensity: 0.8, roughness: 0.4, metalness: 0.2
+  });
+  const matLedR = new THREE.MeshStandardMaterial({
+    color: 0xcc3322, emissive: 0x661110, emissiveIntensity: 0.7, roughness: 0.4, metalness: 0.2
+  });
+  const matMimic = new THREE.MeshStandardMaterial({
+    color: 0x0e1418, roughness: 0.55, metalness: 0.1
+  });
+  const matMimicLine = new THREE.MeshStandardMaterial({
+    color: 0xd0d8e0, roughness: 0.4, metalness: 0.3
+  });
+  const matBracket = new THREE.MeshStandardMaterial({
+    color: 0x7a8490, roughness: 0.4, metalness: 0.65
+  });
+
+  function add(m) { gInterior.add(m); return m; }
+
+  // ── Package placement (viewed from doors looking −Z) ──
+  // LV cabinet front-left of tank; RMU front-right; RTU on left GRP wall
+  const txW = 1.15, txD = 0.75, txH = 1.45;
+  const txCx = 0.0, txCz = -0.50; // tank aft so LV+RMU fit in front
+  const channelH = 0.05;
+  const tankBottom = floorY + channelH;
+  const txCy = tankBottom + txH / 2;
+  const flangeT = 0.04;
+  const flangeH = txH * 0.75;
+  const flangePadW = 0.48; // left/right front flange pads
+
+  // Inner face of left GRP wall (−X)
+  const wallInnerX = -D.housingW / 2 + D.wallThick; // ≈ −1.35
+
+  // ═══════════════════════════════════════════
+  // TRANSFORMER
+  // ═══════════════════════════════════════════
+  const gTx = new THREE.Group();
+  gTx.name = 'transformer';
+  gTx.position.set(txCx, 0, txCz);
+
+  // Underbase channels — two galvanised channels under tank
+  const chLen = 1.25, chW = 0.05, chH = channelH;
+  const chSpacing = 0.5;
+  [-chSpacing / 2, chSpacing / 2].forEach((zOff) => {
+    gTx.add(mesh(
+      new THREE.BoxGeometry(chLen, chH, chW),
+      matGalv,
+      { pos: new THREE.Vector3(0, floorY + chH / 2, zOff) }
+    ));
+    gTx.add(mesh(
+      new THREE.BoxGeometry(chLen, 0.012, 0.012),
+      matGalv,
+      { pos: new THREE.Vector3(0, floorY + chH - 0.006, zOff + chW / 2 + 0.004), cast: false }
+    ));
+    gTx.add(mesh(
+      new THREE.BoxGeometry(chLen, 0.012, 0.012),
+      matGalv,
+      { pos: new THREE.Vector3(0, floorY + chH - 0.006, zOff - chW / 2 - 0.004), cast: false }
+    ));
+  });
+
+  // Stabilising / holding-down cleats at four corners
+  const cleatW = 0.08, cleatH = 0.04, cleatD = 0.06;
+  [[-txW / 2 + 0.05, -txD / 2 + 0.02], [txW / 2 - 0.05, -txD / 2 + 0.02],
+   [-txW / 2 + 0.05, txD / 2 - 0.02], [txW / 2 - 0.05, txD / 2 - 0.02]].forEach(([x, z]) => {
+    gTx.add(mesh(
+      new THREE.BoxGeometry(cleatW, cleatH, cleatD),
+      matGalv,
+      { pos: new THREE.Vector3(x, floorY + cleatH / 2, z) }
+    ));
+    gTx.add(mesh(
+      new THREE.CylinderGeometry(0.01, 0.01, 0.03, 8),
+      matSteel,
+      { pos: new THREE.Vector3(x, floorY + cleatH + 0.015, z), cast: false }
+    ));
+  });
+
+  // Main tank body
+  gTx.add(mesh(
+    new THREE.BoxGeometry(txW, txH, txD),
+    matTx,
+    { pos: new THREE.Vector3(0, txCy, 0) }
+  ));
+  const filletR = 0.03;
+  [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([sx, sz]) => {
+    gTx.add(mesh(
+      new THREE.BoxGeometry(filletR, txH - 0.04, filletR),
+      matTx,
+      { pos: new THREE.Vector3(sx * (txW / 2 - filletR / 2), txCy, sz * (txD / 2 - filletR / 2)), cast: false }
+    ));
+  });
+
+  // Top cover with slight lip
+  const coverH = 0.05;
+  gTx.add(mesh(
+    new THREE.BoxGeometry(txW + 0.04, coverH, txD + 0.04),
+    matTxDark,
+    { pos: new THREE.Vector3(0, tankBottom + txH + coverH / 2, 0) }
+  ));
+  gTx.add(mesh(
+    new THREE.BoxGeometry(txW + 0.06, 0.015, txD + 0.06),
+    matTxDark,
+    { pos: new THREE.Vector3(0, tankBottom + txH + 0.008, 0), cast: false }
+  ));
+
+  // Lifting lugs
+  const lugY = tankBottom + txH + coverH + 0.02;
+  [[-txW / 2 + 0.12, -txD / 2 + 0.08], [txW / 2 - 0.12, -txD / 2 + 0.08],
+   [-txW / 2 + 0.12, txD / 2 - 0.08], [txW / 2 - 0.12, txD / 2 - 0.08]].forEach(([x, z]) => {
+    gTx.add(mesh(
+      new THREE.BoxGeometry(0.06, 0.05, 0.04),
+      matSteel,
+      { pos: new THREE.Vector3(x, lugY, z) }
+    ));
+    gTx.add(mesh(
+      new THREE.TorusGeometry(0.018, 0.005, 6, 12),
+      matSteel,
+      { pos: new THREE.Vector3(x, lugY + 0.03, z), rot: { x: Math.PI / 2 }, cast: false }
+    ));
+  });
+
+  // Filler / breather pipe with cap (top, toward rear so clear of front flanges)
+  gTx.add(mesh(
+    new THREE.CylinderGeometry(0.025, 0.028, 0.18, 10),
+    matSteel,
+    { pos: new THREE.Vector3(txW / 2 - 0.2, tankBottom + txH + coverH + 0.1, -0.15) }
+  ));
+  gTx.add(mesh(
+    new THREE.CylinderGeometry(0.035, 0.035, 0.02, 10),
+    matBlack,
+    { pos: new THREE.Vector3(txW / 2 - 0.2, tankBottom + txH + coverH + 0.2, -0.15), cast: false }
+  ));
+
+  // Rating plate on +X side (front face occupied by LV/RMU)
+  gTx.add(mesh(
+    new THREE.BoxGeometry(0.008, 0.18, 0.28),
+    new THREE.MeshStandardMaterial({ color: 0xc8c4b0, roughness: 0.55, metalness: 0.3 }),
+    { pos: new THREE.Vector3(txW / 2 + 0.005, txCy + 0.15, -0.05), cast: false }
+  ));
+
+  // Front (+Z) mounting flange pads — left (LV) and right (RMU)
+  const padXs = [-txW / 2 + flangePadW / 2 + 0.04, txW / 2 - flangePadW / 2 - 0.04];
+  padXs.forEach((px) => {
+    gTx.add(mesh(
+      new THREE.BoxGeometry(flangePadW, flangeH, flangeT),
+      matTxDark,
+      { pos: new THREE.Vector3(px, txCy, txD / 2 + flangeT / 2) }
+    ));
+    // Bolt heads on flange face
+    for (let i = 0; i < 6; i++) {
+      const t = i / 5;
+      const by = txCy - flangeH / 2 + 0.06 + t * (flangeH - 0.12);
+      [-flangePadW / 2 + 0.05, flangePadW / 2 - 0.05].forEach((bx) => {
+        gTx.add(mesh(
+          new THREE.CylinderGeometry(0.012, 0.012, 0.018, 6),
+          matSteel,
+          { pos: new THREE.Vector3(px + bx, by, txD / 2 + flangeT + 0.005),
+            rot: { x: Math.PI / 2 }, cast: false }
+        ));
+      });
+    }
+  });
+
+  // Cable box underside hint
+  gTx.add(mesh(
+    new THREE.BoxGeometry(0.35, 0.08, 0.28),
+    matTxDark,
+    { pos: new THREE.Vector3(0, tankBottom - 0.02, 0.05), cast: false }
+  ));
+
+  // Corrugated cooling radiators — rear (−Z) and sides (±X); skip front (+Z)
+  const finCount = 15;
+  const finThick = 0.012;
+  const finDepth = 0.07;
+  const finH = txH * 0.82;
+  const finY = txCy;
+
+  // Rear (−Z) fins across tank width
+  {
+    const finSpan = txW * 0.82;
+    const finStart = -finSpan / 2;
+    const finPitch = finSpan / (finCount - 1);
+    for (let i = 0; i < finCount; i++) {
+      const fx = finStart + i * finPitch;
+      gTx.add(mesh(
+        new THREE.BoxGeometry(finThick, finH, finDepth),
+        matFins,
+        { pos: new THREE.Vector3(fx, finY, -(txD / 2 + finDepth / 2)), cast: false }
+      ));
+    }
+    gTx.add(mesh(
+      new THREE.BoxGeometry(finSpan + 0.04, 0.03, finDepth + 0.01),
+      matFins,
+      { pos: new THREE.Vector3(0, finY + finH / 2 + 0.01, -(txD / 2 + finDepth / 2)), cast: false }
+    ));
+    gTx.add(mesh(
+      new THREE.BoxGeometry(finSpan + 0.04, 0.03, finDepth + 0.01),
+      matFins,
+      { pos: new THREE.Vector3(0, finY - finH / 2 - 0.01, -(txD / 2 + finDepth / 2)), cast: false }
+    ));
+  }
+
+  // Side (±X) fins — fewer, mid/rear so not blocked by front cabinets
+  {
+    const sideCount = 10;
+    const sideSpan = txD * 0.7;
+    const sideStart = -txD / 2 + 0.04;
+    const sidePitch = sideSpan / (sideCount - 1);
+    [1, -1].forEach((xSign) => {
+      for (let i = 0; i < sideCount; i++) {
+        const fz = sideStart + i * sidePitch;
+        gTx.add(mesh(
+          new THREE.BoxGeometry(finDepth, finH, finThick),
+          matFins,
+          { pos: new THREE.Vector3(xSign * (txW / 2 + finDepth / 2), finY, fz), cast: false }
+        ));
+      }
+      gTx.add(mesh(
+        new THREE.BoxGeometry(finDepth + 0.01, 0.03, sideSpan + 0.04),
+        matFins,
+        { pos: new THREE.Vector3(xSign * (txW / 2 + finDepth / 2), finY + finH / 2 + 0.01, sideStart + sideSpan / 2), cast: false }
+      ));
+      gTx.add(mesh(
+        new THREE.BoxGeometry(finDepth + 0.01, 0.03, sideSpan + 0.04),
+        matFins,
+        { pos: new THREE.Vector3(xSign * (txW / 2 + finDepth / 2), finY - finH / 2 - 0.01, sideStart + sideSpan / 2), cast: false }
+      ));
+    });
+  }
+
+  add(gTx);
+
+  // Front face of tank (world Z) used for cabinet mating
+  const txFrontZ = txCz + txD / 2 + flangeT;
+
+  // ═══════════════════════════════════════════
+  // LV CABINET — FRONT-LEFT of transformer (+Z / −X)
+  // Operator face (+Z) toward doors; rear bolts to tank
+  // ═══════════════════════════════════════════
+  const lvW = 0.55, lvD = 0.60, lvH = 1.60;
+  const lvCx = -0.32;
+  const lvCz = txFrontZ + lvD / 2;
+  const lvCy = floorY + lvH / 2;
+
+  const gLv = new THREE.Group();
+  gLv.name = 'lvCabinet';
+  gLv.position.set(lvCx, 0, lvCz);
+
+  // Frame / body
+  gLv.add(mesh(
+    new THREE.BoxGeometry(lvW, lvH, lvD),
+    matLVFrame,
+    { pos: new THREE.Vector3(0, lvCy, 0) }
+  ));
+  // Door face (closed) — lighter panel on +Z
+  gLv.add(mesh(
+    new THREE.BoxGeometry(lvW - 0.04, lvH - 0.1, 0.02),
+    matLV,
+    { pos: new THREE.Vector3(0, lvCy, lvD / 2 + 0.005) }
+  ));
+  // Door seam (double-door suggestion)
+  gLv.add(mesh(
+    new THREE.BoxGeometry(0.006, lvH - 0.14, 0.01),
+    matLVFrame,
+    { pos: new THREE.Vector3(0, lvCy, lvD / 2 + 0.016), cast: false }
+  ));
+  // Recessed handle
+  gLv.add(mesh(
+    new THREE.BoxGeometry(0.04, 0.12, 0.025),
+    matSteel,
+    { pos: new THREE.Vector3(lvW / 4, lvCy, lvD / 2 + 0.025) }
+  ));
+  // Ventilation louvre slots near top
+  for (let i = 0; i < 6; i++) {
+    gLv.add(mesh(
+      new THREE.BoxGeometry(lvW - 0.12, 0.012, 0.008),
+      matBlack,
+      { pos: new THREE.Vector3(0, floorY + lvH - 0.18 - i * 0.028, lvD / 2 + 0.018), cast: false }
+    ));
+  }
+  // Fuse-carrier slot lines on door face
+  for (let i = 0; i < 6; i++) {
+    gLv.add(mesh(
+      new THREE.BoxGeometry(lvW - 0.16, 0.035, 0.006),
+      matLVFrame,
+      { pos: new THREE.Vector3(0, floorY + 0.55 + i * 0.1, lvD / 2 + 0.018), cast: false }
+    ));
+  }
+  // Glazed / label strip
+  gLv.add(mesh(
+    new THREE.BoxGeometry(lvW - 0.14, 0.08, 0.008),
+    new THREE.MeshStandardMaterial({
+      color: 0xb8c4d0, roughness: 0.3, metalness: 0.1, transparent: true, opacity: 0.65
+    }),
+    { pos: new THREE.Vector3(0, floorY + lvH - 0.42, lvD / 2 + 0.018), cast: false }
+  ));
+
+  // Top gland plate with cable entries
+  gLv.add(mesh(
+    new THREE.BoxGeometry(lvW + 0.02, 0.025, lvD + 0.02),
+    matLVFrame,
+    { pos: new THREE.Vector3(0, floorY + lvH + 0.012, 0) }
+  ));
+  for (let i = 0; i < 4; i++) {
+    gLv.add(mesh(
+      new THREE.CylinderGeometry(0.018, 0.018, 0.04, 8),
+      matBlack,
+      { pos: new THREE.Vector3(-0.15 + i * 0.1, floorY + lvH + 0.04, -0.1), cast: false }
+    ));
+  }
+
+  // Bottom cable box / outgoing LV stubs toward trench
+  gLv.add(mesh(
+    new THREE.BoxGeometry(lvW - 0.1, 0.16, 0.2),
+    matLVFrame,
+    { pos: new THREE.Vector3(0, floorY + 0.1, lvD / 2 - 0.08) }
+  ));
+  for (let i = 0; i < 3; i++) {
+    gLv.add(mesh(
+      new THREE.CylinderGeometry(0.025, 0.03, 0.2, 8),
+      matCable,
+      { pos: new THREE.Vector3(-0.12 + i * 0.12, floorY - 0.04, lvD / 2) }
+    ));
+  }
+
+  // DANGER flash label
+  gLv.add(mesh(
+    new THREE.BoxGeometry(0.1, 0.1, 0.006),
+    matDanger,
+    { pos: new THREE.Vector3(-lvW / 4, floorY + lvH - 0.55, lvD / 2 + 0.02), cast: false }
+  ));
+  gLv.add(mesh(
+    new THREE.BoxGeometry(0.05, 0.05, 0.004),
+    matBlack,
+    { pos: new THREE.Vector3(-lvW / 4, floorY + lvH - 0.55, lvD / 2 + 0.024),
+      rot: { z: Math.PI / 4 }, cast: false }
+  ));
+
+  // Flange mating face (−Z toward transformer front)
+  gLv.add(mesh(
+    new THREE.BoxGeometry(flangePadW * 0.95, flangeH * 0.95, 0.03),
+    matLVFrame,
+    { pos: new THREE.Vector3(0, lvCy, -lvD / 2 - 0.015) }
+  ));
+
+  add(gLv);
+
+  // ═══════════════════════════════════════════
+  // RMU — FRONT-RIGHT of transformer (+Z / +X)
+  // Operator face (+Z) toward doors; handles & mimic face aisle
+  // ═══════════════════════════════════════════
+  const rmuW = 0.58, rmuD = 0.80, rmuH = 1.48;
+  const rmuCx = 0.33;
+  const rmuCz = txFrontZ + rmuD / 2;
+  const rmuCy = floorY + rmuH / 2;
+
+  const gRmu = new THREE.Group();
+  gRmu.name = 'rmu';
+  gRmu.position.set(rmuCx, 0, rmuCz);
+
+  // Main body
+  gRmu.add(mesh(
+    new THREE.BoxGeometry(rmuW, rmuH, rmuD),
+    matRMUBody,
+    { pos: new THREE.Vector3(0, rmuCy, 0) }
+  ));
+
+  // Three vertical compartment seams (ring–tee–ring)
+  const compW = rmuW / 3;
+  for (let i = 1; i <= 2; i++) {
+    gRmu.add(mesh(
+      new THREE.BoxGeometry(0.008, rmuH - 0.08, 0.01),
+      matRMUDark,
+      { pos: new THREE.Vector3(-rmuW / 2 + i * compW, rmuCy, rmuD / 2 + 0.002), cast: false }
+    ));
+  }
+  // Door panel frames on +Z
+  for (let i = 0; i < 3; i++) {
+    const px = -rmuW / 2 + compW / 2 + i * compW;
+    gRmu.add(mesh(
+      new THREE.BoxGeometry(compW - 0.03, rmuH - 0.18, 0.012),
+      matRMUDoor,
+      { pos: new THREE.Vector3(px, rmuCy + 0.02, rmuD / 2 + 0.008), cast: false }
+    ));
+  }
+
+  // Roof canopy / rain hood
+  gRmu.add(mesh(
+    new THREE.BoxGeometry(rmuW + 0.06, 0.03, rmuD + 0.1),
+    matRMUDark,
+    { pos: new THREE.Vector3(0, floorY + rmuH + 0.015, 0.02) }
+  ));
+
+  // Mimic diagram panel (dark plaque with 3 switch symbols) on +Z
+  const mimicW = rmuW - 0.1, mimicH = 0.22;
+  gRmu.add(mesh(
+    new THREE.BoxGeometry(mimicW, mimicH, 0.01),
+    matMimic,
+    { pos: new THREE.Vector3(0, floorY + rmuH - 0.22, rmuD / 2 + 0.018), cast: false }
+  ));
+  for (let i = 0; i < 3; i++) {
+    const sx = -mimicW / 2 + mimicW / 6 + i * (mimicW / 3);
+    const my = floorY + rmuH - 0.22;
+    const mz = rmuD / 2 + 0.025;
+    gRmu.add(mesh(
+      new THREE.BoxGeometry(0.006, 0.14, 0.004),
+      matMimicLine,
+      { pos: new THREE.Vector3(sx, my, mz), cast: false }
+    ));
+    gRmu.add(mesh(
+      new THREE.BoxGeometry(0.05, 0.006, 0.004),
+      matMimicLine,
+      { pos: new THREE.Vector3(sx + 0.02, my + 0.02, mz), rot: { z: -0.4 }, cast: false }
+    ));
+    gRmu.add(mesh(
+      new THREE.CylinderGeometry(0.012, 0.012, 0.005, 10),
+      matMimicLine,
+      { pos: new THREE.Vector3(sx, my - 0.04, mz), rot: { x: Math.PI / 2 }, cast: false }
+    ));
+  }
+
+  // Three operating handles / levers face +Z (toward doors)
+  const handleY = floorY + 0.85;
+  for (let i = 0; i < 3; i++) {
+    const hx = -rmuW / 2 + compW / 2 + i * compW;
+    const hz = rmuD / 2 + 0.02;
+    gRmu.add(mesh(
+      new THREE.CylinderGeometry(0.018, 0.018, 0.06, 10),
+      matSteel,
+      { pos: new THREE.Vector3(hx, handleY, hz + 0.03), rot: { x: Math.PI / 2 } }
+    ));
+    gRmu.add(mesh(
+      new THREE.BoxGeometry(0.028, 0.028, 0.16),
+      matBlack,
+      { pos: new THREE.Vector3(hx, handleY - 0.02, hz + 0.12) }
+    ));
+    gRmu.add(mesh(
+      new THREE.SphereGeometry(0.022, 10, 8),
+      matSteel,
+      { pos: new THREE.Vector3(hx, handleY - 0.02, hz + 0.2) }
+    ));
+  }
+
+  // Cable boxes at bottom front + corrugated conduit stubs
+  gRmu.add(mesh(
+    new THREE.BoxGeometry(rmuW - 0.08, 0.18, 0.22),
+    matRMUDark,
+    { pos: new THREE.Vector3(0, floorY + 0.12, rmuD / 2 - 0.05) }
+  ));
+  for (let i = 0; i < 3; i++) {
+    const cx = -0.16 + i * 0.16;
+    gRmu.add(mesh(
+      new THREE.CylinderGeometry(0.028, 0.032, 0.22, 8),
+      matCable,
+      { pos: new THREE.Vector3(cx, floorY - 0.05, rmuD / 2 + 0.02) }
+    ));
+    for (let r = 0; r < 4; r++) {
+      gRmu.add(mesh(
+        new THREE.TorusGeometry(0.033, 0.004, 4, 10),
+        matCable,
+        { pos: new THREE.Vector3(cx, floorY - 0.02 - r * 0.04, rmuD / 2 + 0.02),
+          rot: { x: Math.PI / 2 }, cast: false }
+      ));
+    }
+  }
+
+  // Pressure relief / label plates
+  gRmu.add(mesh(
+    new THREE.BoxGeometry(0.12, 0.06, 0.006),
+    matDanger,
+    { pos: new THREE.Vector3(rmuW / 2 - 0.1, floorY + rmuH - 0.45, rmuD / 2 + 0.016), cast: false }
+  ));
+  // Padlock hasps
+  for (let i = 0; i < 3; i++) {
+    const px = -rmuW / 2 + compW / 2 + i * compW;
+    gRmu.add(mesh(
+      new THREE.BoxGeometry(0.03, 0.04, 0.02),
+      matSteel,
+      { pos: new THREE.Vector3(px + compW / 2 - 0.04, floorY + 0.55, rmuD / 2 + 0.02), cast: false }
+    ));
+  }
+
+  // Flange mating face (−Z toward transformer front)
+  gRmu.add(mesh(
+    new THREE.BoxGeometry(flangePadW * 0.95, flangeH * 0.95, 0.03),
+    matRMUDark,
+    { pos: new THREE.Vector3(0, rmuCy, -rmuD / 2 - 0.015) }
+  ));
+
+  add(gRmu);
+
+  // ═══════════════════════════════════════════
+  // RTU — wall-mounted on LEFT interior GRP wall (−X)
+  // Back against wall; operator face toward aisle (+X)
+  // ═══════════════════════════════════════════
+  // Depth off wall (X), width along wall (Z)
+  const rtuDepth = 0.30, rtuWidth = 0.40, rtuH = 0.80;
+  const rtuBottom = floorY + 0.35;
+  const rtuCx = wallInnerX + rtuDepth / 2;
+  const rtuCz = 0.45; // front half for access, clear of door swing / RMU
+  const rtuCy = rtuBottom + rtuH / 2;
+
+  const gRtu = new THREE.Group();
+  gRtu.name = 'rtu';
+  gRtu.position.set(rtuCx, 0, rtuCz);
+
+  // Unistrut / wall brackets between RTU and GRP wall
+  const strutLen = rtuH + 0.12;
+  const strutY = rtuCy;
+  [-rtuWidth / 2 + 0.04, rtuWidth / 2 - 0.04].forEach((zOff) => {
+    // Vertical Unistrut channel against wall
+    gRtu.add(mesh(
+      new THREE.BoxGeometry(0.04, strutLen, 0.04),
+      matBracket,
+      { pos: new THREE.Vector3(-rtuDepth / 2 - 0.02, strutY, zOff) }
+    ));
+    // Cleat / fixing pads top & bottom
+    [rtuH / 2 - 0.05, -rtuH / 2 + 0.05].forEach((yOff) => {
+      gRtu.add(mesh(
+        new THREE.BoxGeometry(0.06, 0.05, 0.08),
+        matBracket,
+        { pos: new THREE.Vector3(-rtuDepth / 2 - 0.01, rtuCy + yOff, zOff), cast: false }
+      ));
+      // Bolt stub into wall
+      gRtu.add(mesh(
+        new THREE.CylinderGeometry(0.008, 0.008, 0.03, 6),
+        matSteel,
+        { pos: new THREE.Vector3(-rtuDepth / 2 - 0.04, rtuCy + yOff, zOff),
+          rot: { z: Math.PI / 2 }, cast: false }
+      ));
+    });
+  });
+  // Horizontal cross Unistrut mid-height
+  gRtu.add(mesh(
+    new THREE.BoxGeometry(0.035, 0.035, rtuWidth + 0.04),
+    matBracket,
+    { pos: new THREE.Vector3(-rtuDepth / 2 - 0.02, rtuCy, 0), cast: false }
+  ));
+
+  // RTU cabinet body (depth in X, width in Z)
+  gRtu.add(mesh(
+    new THREE.BoxGeometry(rtuDepth, rtuH, rtuWidth),
+    matRTUBody,
+    { pos: new THREE.Vector3(0, rtuCy, 0) }
+  ));
+  // Door panel facing aisle (+X)
+  gRtu.add(mesh(
+    new THREE.BoxGeometry(0.012, rtuH - 0.06, rtuWidth - 0.03),
+    new THREE.MeshStandardMaterial({ color: 0xc4b49a, roughness: 0.55, metalness: 0.1 }),
+    { pos: new THREE.Vector3(rtuDepth / 2 + 0.004, rtuCy, 0), cast: false }
+  ));
+  // Lock
+  gRtu.add(mesh(
+    new THREE.BoxGeometry(0.02, 0.045, 0.035),
+    matSteel,
+    { pos: new THREE.Vector3(rtuDepth / 2 + 0.018, rtuCy, rtuWidth / 2 - 0.06), cast: false }
+  ));
+  // Status LED dots on +X face
+  gRtu.add(mesh(
+    new THREE.SphereGeometry(0.012, 8, 6),
+    matLedG,
+    { pos: new THREE.Vector3(rtuDepth / 2 + 0.015, rtuCy + 0.25, -0.08), cast: false }
+  ));
+  gRtu.add(mesh(
+    new THREE.SphereGeometry(0.012, 8, 6),
+    matLedR,
+    { pos: new THREE.Vector3(rtuDepth / 2 + 0.015, rtuCy + 0.25, -0.05), cast: false }
+  ));
+  gRtu.add(mesh(
+    new THREE.SphereGeometry(0.01, 8, 6),
+    matLedG,
+    { pos: new THREE.Vector3(rtuDepth / 2 + 0.015, rtuCy + 0.25, -0.02), cast: false }
+  ));
+
+  // Antenna stub / gland on top
+  gRtu.add(mesh(
+    new THREE.CylinderGeometry(0.008, 0.01, 0.22, 8),
+    matBlack,
+    { pos: new THREE.Vector3(0.05, rtuBottom + rtuH + 0.12, 0.1) }
+  ));
+  gRtu.add(mesh(
+    new THREE.SphereGeometry(0.015, 8, 6),
+    matBlack,
+    { pos: new THREE.Vector3(0.05, rtuBottom + rtuH + 0.24, 0.1), cast: false }
+  ));
+
+  // Umbilical conduit: along wall (−X) toward rear, then across toward RMU/transformer
+  const umbMat = matCable;
+  const umbY = rtuCy - 0.15;
+  // Drop from RTU bottom along wall
+  gRtu.add(mesh(
+    new THREE.CylinderGeometry(0.015, 0.015, 0.25, 8),
+    umbMat,
+    { pos: new THREE.Vector3(-rtuDepth / 2 + 0.04, rtuBottom - 0.05, -rtuWidth / 2 + 0.05), cast: false }
+  ));
+  // Run along left wall rearward (local Z → world Z, but group is at rtuCz)
+  // Use world-space segments added to gInterior via absolute positions through group offsets:
+  // Along-wall run in −Z from RTU toward mid depth
+  const umbAlongLen = 0.55;
+  gRtu.add(mesh(
+    new THREE.CylinderGeometry(0.015, 0.015, umbAlongLen, 8),
+    umbMat,
+    { pos: new THREE.Vector3(-rtuDepth / 2 + 0.04, umbY, -rtuWidth / 2 - umbAlongLen / 2),
+      rot: { x: Math.PI / 2 }, cast: false }
+  ));
+  // Cross run toward RMU (+X) at mid height along wall then out
+  const umbCrossLen = Math.abs(rmuCx - rtuCx) - 0.1;
+  gRtu.add(mesh(
+    new THREE.CylinderGeometry(0.015, 0.015, umbCrossLen, 8),
+    umbMat,
+    { pos: new THREE.Vector3(umbCrossLen / 2, umbY, -rtuWidth / 2 - umbAlongLen),
+      rot: { z: Math.PI / 2 }, cast: false }
+  ));
+  // Second parallel conduit slightly offset
+  gRtu.add(mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, umbAlongLen, 8),
+    umbMat,
+    { pos: new THREE.Vector3(-rtuDepth / 2 + 0.04, umbY - 0.04, -rtuWidth / 2 - umbAlongLen / 2),
+      rot: { x: Math.PI / 2 }, cast: false }
+  ));
+  gRtu.add(mesh(
+    new THREE.CylinderGeometry(0.012, 0.012, umbCrossLen, 8),
+    umbMat,
+    { pos: new THREE.Vector3(umbCrossLen / 2, umbY - 0.04, -rtuWidth / 2 - umbAlongLen - 0.03),
+      rot: { z: Math.PI / 2 }, cast: false }
+  ));
+
+  add(gRtu);
+
+  // ═══════════════════════════════════════════
+  // CONSUMER UNIT — wall-mounted next to RTU on same −X GRP wall
+  // ═══════════════════════════════════════════
+  const cuWidth = 0.25, cuDepth = 0.15, cuH = 0.35; // width along Z, depth off wall (X)
+  const cuCx = wallInnerX + cuDepth / 2;
+  const cuCz = rtuCz - rtuWidth / 2 - cuWidth / 2 - 0.08; // beside RTU toward rear
+  const cuCy = floorY + 0.45; // slightly lower than RTU mid
+
+  const gCu = new THREE.Group();
+  gCu.name = 'consumerUnit';
+  gCu.position.set(cuCx, 0, cuCz);
+
+  // Wall fixing cleats
+  gCu.add(mesh(
+    new THREE.BoxGeometry(0.03, cuH + 0.04, 0.03),
+    matBracket,
+    { pos: new THREE.Vector3(-cuDepth / 2 - 0.015, cuCy, -cuWidth / 2 + 0.03), cast: false }
+  ));
+  gCu.add(mesh(
+    new THREE.BoxGeometry(0.03, cuH + 0.04, 0.03),
+    matBracket,
+    { pos: new THREE.Vector3(-cuDepth / 2 - 0.015, cuCy, cuWidth / 2 - 0.03), cast: false }
+  ));
+
+  gCu.add(mesh(
+    new THREE.BoxGeometry(cuDepth, cuH, cuWidth),
+    matConsumer,
+    { pos: new THREE.Vector3(0, cuCy, 0) }
+  ));
+  // Face plate toward aisle (+X)
+  gCu.add(mesh(
+    new THREE.BoxGeometry(0.01, cuH - 0.02, cuWidth - 0.02),
+    new THREE.MeshStandardMaterial({ color: 0xb0b0a8, roughness: 0.5, metalness: 0.1 }),
+    { pos: new THREE.Vector3(cuDepth / 2 + 0.003, cuCy, 0), cast: false }
+  ));
+  // DIN-rail MCB slot lines (6 ways) — vertical slots along Z
+  for (let i = 0; i < 6; i++) {
+    gCu.add(mesh(
+      new THREE.BoxGeometry(0.008, 0.2, 0.028),
+      matBlack,
+      { pos: new THREE.Vector3(cuDepth / 2 + 0.01, cuCy, -0.09 + i * 0.032), cast: false }
+    ));
+  }
+  // Small mounting bracket hint on top
+  gCu.add(mesh(
+    new THREE.BoxGeometry(0.04, 0.02, cuWidth + 0.02),
+    matSteel,
+    { pos: new THREE.Vector3(0, cuCy + cuH / 2 + 0.01, 0), cast: false }
+  ));
+
+  add(gCu);
+}
+
+// ─── Satellite pole (optional, off by default) ───
+function buildPole() {
+  gPole.clear();
+  // Stub pole near enclosure — drawing shows 2800×2800 zone when required
+  const pole = mesh(
+    new THREE.CylinderGeometry(0.04, 0.05, 3.5, 12),
+    matSteel,
+    { pos: new THREE.Vector3(-2.2, 1.75, -2.2) }
+  );
+  gPole.add(pole);
+  // Small dish stub
+  const dish = mesh(
+    new THREE.CylinderGeometry(0.25, 0.25, 0.03, 24),
+    new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.6, roughness: 0.3 }),
+    { pos: new THREE.Vector3(-2.2, 3.4, -2.05), rot: { x: 0.4 } }
+  );
+  gPole.add(dish);
+}
+
+// ─── Dimension annotations ───
+function buildDims() {
+  gDims.clear();
+  // Clear old dim labels
+  labelTargets.filter(l => l.isDim).forEach(l => {
+    l.el.remove();
+    scene.remove(l.obj);
+  });
+  for (let i = labelTargets.length - 1; i >= 0; i--) {
+    if (labelTargets[i].isDim) labelTargets.splice(i, 1);
+  }
+
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x3d9b6e });
+  function dimLine(points) {
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    gDims.add(new THREE.Line(geo, lineMat));
+  }
+
+  const toc = D.plinthH;
+  // Housing footprint 2.8 × 2.8
+  dimLine([
+    new THREE.Vector3(-1.4, toc + 0.05, 1.55),
+    new THREE.Vector3(1.4, toc + 0.05, 1.55)
+  ]);
+  addLabel('2800 mm', new THREE.Vector3(0, toc + 0.15, 1.7), 'dims', true);
+
+  dimLine([
+    new THREE.Vector3(1.55, toc + 0.05, -1.4),
+    new THREE.Vector3(1.55, toc + 0.05, 1.4)
+  ]);
+  addLabel('2800 mm', new THREE.Vector3(1.75, toc + 0.15, 0), 'dims', true);
+
+  // Height 2400
+  dimLine([
+    new THREE.Vector3(-1.6, toc, 1.4),
+    new THREE.Vector3(-1.6, toc + 2.4, 1.4)
+  ]);
+  addLabel('2400 mm', new THREE.Vector3(-1.85, toc + 1.2, 1.4), 'dims', true);
+
+  // Plinth 3000
+  dimLine([
+    new THREE.Vector3(-1.5, 0.02, 1.85),
+    new THREE.Vector3(1.5, 0.02, 1.85)
+  ]);
+  addLabel('3000 mm RC base', new THREE.Vector3(0, 0.2, 2.05), 'dims', true);
+
+  // TOC 150
+  dimLine([
+    new THREE.Vector3(1.7, 0, 1.5),
+    new THREE.Vector3(1.7, 0.15, 1.5)
+  ]);
+  addLabel('TOC 150 mm', new THREE.Vector3(2.05, 0.2, 1.5), 'dims', true);
+
+  // Recess 1200
+  dimLine([
+    new THREE.Vector3(-0.6, toc + 0.08, 0),
+    new THREE.Vector3(0.6, toc + 0.08, 0)
+  ]);
+  addLabel('1200 mm recess', new THREE.Vector3(0, toc + 0.35, 0.15), 'dims', true);
+
+  // Roof overhang
+  addLabel('150 mm overhang', new THREE.Vector3(0, toc + 2.55, 1.55), 'dims', true);
+
+  // Hardstanding
+  addLabel('500 mm hardstanding', new THREE.Vector3(2.1, 0.15, 0), 'dims', true);
+}
+
+// ─── Name labels ───
+function buildNameLabels() {
+  // Remove non-dim labels
+  labelTargets.filter(l => !l.isDim).forEach(l => {
+    l.el.remove();
+    scene.remove(l.obj);
+  });
+  for (let i = labelTargets.length - 1; i >= 0; i--) {
+    if (!labelTargets[i].isDim) labelTargets.splice(i, 1);
+  }
+
+  const toc = D.plinthH;
+  addLabel('Front', new THREE.Vector3(0, toc + 1.2, 1.55), 'labels');
+  addLabel('Foundation', new THREE.Vector3(0, 0.35, -1.7), 'labels');
+  addLabel('Transformer', new THREE.Vector3(0.0, toc + 1.65, -0.50), 'labels');
+  addLabel('LV Cabinet', new THREE.Vector3(-0.32, toc + 1.75, 0.22), 'labels');
+  addLabel('RMU', new THREE.Vector3(0.33, toc + 1.55, 0.32), 'labels');
+  addLabel('RTU', new THREE.Vector3(-1.20, toc + 1.15, 0.45), 'labels');
+  addLabel('Distribution board', new THREE.Vector3(-1.25, toc + 1.55, -0.15), 'labels');
+  addLabel('10-way earth bar', new THREE.Vector3(1.15, toc - 0.05, 0.35), 'labels');
+  addLabel('GRP Flooring', new THREE.Vector3(0, toc + 0.2, 0.5), 'labels');
+  addLabel('LED lighting', new THREE.Vector3(-1.2, toc + 1.9, 0.1), 'labels');
+  addLabel('Louvred vents', new THREE.Vector3(1.55, toc + 1.2, 0), 'labels');
+}
+
+// ─── Build all ───
+buildGround();
+buildFoundation();
+buildFlooring();
+buildRebar();
+buildEarthing();
+buildWalls();
+buildRoof();
+buildDoors();
+buildInterior();
+buildServices();
+buildPole();
+buildDims();
+buildNameLabels();
+
+// ─── Colour update ───
+function setEnclosureColour(hex) {
+  enclosureColour = hex;
+  matEnclosure.color.setHex(hex);
+  // Rebuild parts that cloned materials
+  buildWalls();
+  buildRoof();
+  buildDoors();
+}
+
+// ─── Exploded view ───
+function setExploded(on) {
+  exploded = on;
+  gEnclosureLift.position.y = on ? 1.2 : 0;
+  gFlooring.position.y = on ? 0.35 : 0;
+  document.getElementById('btn-explode').classList.toggle('active', on);
+}
+
+// ─── UI wiring ───
+function bindToggle(id, group) {
+  document.getElementById(id).addEventListener('change', (e) => {
+    group.visible = e.target.checked;
+  });
+}
+bindToggle('tog-walls', gWalls);
+bindToggle('tog-roof', gRoof);
+bindToggle('tog-doors', gDoors);
+bindToggle('tog-flooring', gFlooring);
+bindToggle('tog-foundation', gFoundation);
+bindToggle('tog-interior', gInterior);
+bindToggle('tog-ground', gGround);
+bindToggle('tog-rebar', gRebar);
+bindToggle('tog-earthing', gEarthing);
+document.getElementById('tog-services').addEventListener('change', (e) => {
+  const on = e.target.checked;
+  gServices.visible = on;
+  scene.children.forEach(c => {
+    if (c.userData && c.userData.serviceLight) c.visible = on;
+  });
+});
+document.getElementById('tog-dims').addEventListener('change', (e) => {
+  gDims.visible = e.target.checked;
+  labelTargets.forEach(l => {
+    if (l.isDim) l.el.style.display = e.target.checked ? '' : 'none';
+  });
+});
+document.getElementById('tog-pole').addEventListener('change', (e) => {
+  gPole.visible = e.target.checked;
+});
+document.getElementById('tog-labels').addEventListener('change', (e) => {
+  labelTargets.forEach(l => {
+    if (!l.isDim) l.el.style.display = e.target.checked ? '' : 'none';
+  });
+});
+// Init dim labels hidden
+labelTargets.forEach(l => { if (l.isDim) l.el.style.display = 'none'; });
+
+const doorSlider = document.getElementById('door-angle');
+const doorVal = document.getElementById('door-val');
+doorSlider.addEventListener('input', (e) => {
+  const v = +e.target.value;
+  doorVal.textContent = v + '°';
+  applyDoorAngle(v);
+});
+document.getElementById('btn-doors-closed').addEventListener('click', () => {
+  doorSlider.value = 0; doorVal.textContent = '0°'; applyDoorAngle(0);
+});
+document.getElementById('btn-doors-open').addEventListener('click', () => {
+  doorSlider.value = 90; doorVal.textContent = '90°'; applyDoorAngle(90);
+});
+
+document.getElementById('btn-colour-green').addEventListener('click', () => {
+  setEnclosureColour(COLOURS.darkGreen);
+  document.getElementById('btn-colour-green').classList.add('active');
+  document.getElementById('btn-colour-brown').classList.remove('active');
+});
+document.getElementById('btn-colour-brown').addEventListener('click', () => {
+  setEnclosureColour(COLOURS.midBrown);
+  document.getElementById('btn-colour-brown').classList.add('active');
+  document.getElementById('btn-colour-green').classList.remove('active');
+});
+
+document.getElementById('btn-explode').addEventListener('click', () => {
+  setExploded(!exploded);
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  setExploded(false);
+  setIsoCamera();
+});
+document.getElementById('btn-iso').addEventListener('click', setIsoCamera);
+
+
+
+
+// ─── Sheet presets ───
+function setToggle(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.checked = val;
+  el.dispatchEvent(new Event('change'));
+}
+
+document.getElementById('btn-civil-only').addEventListener('click', () => {
+  setToggle('tog-walls', true);
+  setToggle('tog-roof', true);
+  setToggle('tog-doors', true);
+  setToggle('tog-foundation', true);
+  setToggle('tog-interior', true);
+  setToggle('tog-ground', true);
+  setToggle('tog-flooring', true);
+  setToggle('tog-rebar', false);
+  setToggle('tog-earthing', false);
+  setToggle('tog-services', false);
+  setIsoCamera();
+});
+
+document.getElementById('btn-show-all').addEventListener('click', () => {
+  setToggle('tog-walls', true);
+  setToggle('tog-roof', true);
+  setToggle('tog-doors', true);
+  setToggle('tog-foundation', true);
+  setToggle('tog-interior', true);
+  setToggle('tog-ground', true);
+  setToggle('tog-flooring', true);
+  setToggle('tog-rebar', true);
+  setToggle('tog-earthing', true);
+  setToggle('tog-services', true);
+  setIsoCamera();
+});
+
+document.getElementById('btn-foundation-dig').addEventListener('click', () => {
+  setToggle('tog-walls', false);
+  setToggle('tog-roof', false);
+  setToggle('tog-doors', false);
+  setToggle('tog-interior', false);
+  setToggle('tog-services', false);
+  setToggle('tog-flooring', false);
+  setToggle('tog-foundation', true);
+  setToggle('tog-ground', true);
+  setToggle('tog-rebar', true);
+  setToggle('tog-earthing', true);
+  camera.position.set(4.5, 3.5, 4.5);
+  controls.target.set(0, 0.1, 0);
+  controls.update();
+});
+
+
+// Legend focus
+const focusPoints = {
+  front: { pos: [4, 2.5, 5], target: [0, 1.2, 1.2] },
+  foundation: { pos: [3.5, 4, 3.5], target: [0, 0.1, 0] },
+  recess: { pos: [0.5, 5, 0.5], target: [0, 0, 0] },
+  transformer: { pos: [2.5, 2.5, 3.2], target: [0.0, 1.1, -0.50] },
+  rmu: { pos: [2.8, 2.0, 3.5], target: [0.33, 1.0, 0.32] },
+  lv: { pos: [-2.5, 2.0, 3.5], target: [-0.32, 1.1, 0.22] },
+  rtu: { pos: [0.5, 1.8, 2.8], target: [-1.20, 0.9, 0.45] },
+  db: { pos: [0.2, 1.8, 2.2], target: [-1.25, 1.4, -0.15] },
+  flooring: { pos: [2, 4, 2], target: [0, 0.15, 0] },
+  rebar: { pos: [3.5, 3.5, 3.5], target: [0, 0.05, 0] },
+  earthing: { pos: [4, 2, 4], target: [0, -0.3, 0] },
+  earthbar: { pos: [3.2, 1.2, 1.5], target: [1.2, 0.0, 0.35] },
+  services: { pos: [0.5, 2.0, 2.5], target: [-1.2, 1.5, 0.2] },
+};
+document.querySelectorAll('.legend-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const key = item.dataset.focus;
+    const f = focusPoints[key];
+    if (!f) return;
+    camera.position.set(...f.pos);
+    controls.target.set(...f.target);
+    controls.update();
+  });
+});
+
+// Hide hint after a few seconds
+setTimeout(() => {
+  const h = document.getElementById('hint');
+  if (h) h.style.opacity = '0';
+}, 5000);
+
+// ─── Resize ───
+function onResize() {
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// ─── CSS label projection ───
+const _v = new THREE.Vector3();
+function updateLabels() {
+  const showLabels = document.getElementById('tog-labels').checked;
+  const showDims = document.getElementById('tog-dims').checked;
+  for (const l of labelTargets) {
+    if (l.isDim && !showDims) { l.el.style.display = 'none'; continue; }
+    if (!l.isDim && !showLabels) { l.el.style.display = 'none'; continue; }
+    _v.copy(l.obj.position).project(camera);
+    const visible = _v.z < 1;
+    if (!visible) { l.el.style.display = 'none'; continue; }
+    l.el.style.display = '';
+    const x = (_v.x * 0.5 + 0.5) * wrap.clientWidth;
+    const y = (-_v.y * 0.5 + 0.5) * wrap.clientHeight;
+    l.el.style.left = x + 'px';
+    l.el.style.top = y + 'px';
+  }
+}
+
+// ─── Animate ───
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  updateLabels();
+  renderer.render(scene, camera);
+}
+animate();
+})();
+</script>
+</body>
+</html>

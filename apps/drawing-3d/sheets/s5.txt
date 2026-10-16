@@ -1,0 +1,110 @@
+                                                                                                                                                                                                                                                                                                            NOTES:
+
+                                                                                                                                                                                                                                                                                                            1.     THE FINAL LOCATION OF ALL EQUIPMENT SHALL BE AGREED WITH UK
+                                                                                                                                                                                                                                                                                                                   POWER NETWORKS PRIOR TO INSTALLATION WORKS COMMENCING ON
+                                                                                                                                                                                                                                                                                                                   SITE.
+
+                                                                                                                                                                                                                                                                                                            2.     ALL WORK AND TESTING SHALL BE CARRIED OUT BY SUITABLY
+                                                                                                                                                                                                                         BUILDING SERVICES SPECIFICATION                                                           COMPETENT OPERATIVES IN ACCORDANCE WITH BS 7671.
+                                                                                                                                                            SPECIFICATION                 ALL SUBSTATION ELECTRICAL SERVICES SHALL BE PROVIDED IN ACCORDANCE WITH EDS 07-1119.
+                                                                                                                                                                                                                                                                                                            3.     FOR BUILDING SERVICES SPECIFICATION SEE SPECIFICATION TABLE.
+                                                                                                                                                                                          THE SUBSTATION LVAC SUPPLY SHALL BE PROVIDED IN ACCORDANCE WITH EDS 08-1112.
+
+                                                                                                                                                                                          THIS TABLE PROVIDES A SUMMARY OF MAIN REQUIREMENTS.
+
+                                                                                                                                                            MATERIALS                     ALL MATERIALS SHALL BE SELECTED FROM EAS 07-1000a.
+                                                                                                                                                                                                                                                                                                                 BUILDING SERVICES KEY
+                                                                                                                                                                                         INTERNAL LIGHT FITTINGS SHALL BE MINIMUM IP55 LED AND EXTERNAL LIGHT FITTINGS SHALL BE MINIMUM IP65 LED.
+
+                                                                                                                                                                                          ACCESSORIES AND MOUNTING BOXES SHALL BE MINIMUM IP55 SURFACE MOUNTED FROM THE MK MASTERSEAL RANGE OR
+                                                                                                                                                                                          EQUIVALENT.                                                                                                                                          1500mm TWIN LED WALL MOUNTED LIGHT
+
+                                                                                                                                                            DISTRIBUTION                  THE DISTRIBUTION BOARD SHALL BE A SINGLE-PHASE AND NEUTRAL MINIMUM IP55 INSULATED THERMOPLASTIC TYPE WITH A
+                                                                                                                                                            BOARD                         MINIMUM OF 6 WAYS (INTERNAL LIGHTING, 13A SOCKETS, 13A TEST SOCKET, RTU, SPARE, SPARE).
+                                                                                                                                                                                                                                                                                                                                               13A UNSWITCHED FUSED CONNECTION UNIT
+                                                                                                                                                                                          ALL MCBs AND RCBO RATINGS SHALL BE IN ACCORDANCE WITH EDS 07-1119.                                                                                   FOR RTU
+
+                                                                                                                                                                                          THE DISTRIBUTION BOARD SHALL BE MOUNTED AT A HEIGHT OF 1400mm ABOVE FFL
+                                                                                                                                                                                                                                                                                                                                               13A SWITCHED SINGLE SOCKET LABELLED
+                                                                                                                                                            INTERNAL LIGHTING            INTERNAL LIGHT FITTINGS SHALL BE INSTALLED AS SHOWN ON THE DRAWING WITH ADDITIONAL LIGHT FITTINGS AS REQUIRED TO                                      FOR TEST EQUIPMENT
+                                                                                                                                                                                         PROVIDE ADEQUATE LUMINANCE TO ALL AREAS.
+
+                                                                                                                                                                                          EMERGENCY LIGHT FITTINGS SHALL BE INSTALLED AS SHOWN ON THE DRAWING.                                                                                 13A SWITCHED DOUBLE SOCKET
+                                                                                                                                                                                          LIGHT FITTINGS SHALL BE MOUNTED AT A TYPICAL HEIGHT OF 1800mm ABOVE FFL AND BE POSITIONED TO ALLOW LAMP
+                                                                                                                                                                                          REPLACEMENT AND MAINTENANCE FROM FLOOR LEVEL.
+                                                                                                                                                                                                                                                                                                                                               LIGHT SWITCH
+                                                                                                                                                                                          LIGHT FITTINGS SHALL BE POSITIONED TO AVOID SHADOWS WHEN EQUIPMENT DOORS ARE OPEN.
+                                                                                                                                                                                          LIGHT FITTINGS SHOULD BE CONNECTED VIA A PLUG IN ROSE.
+
+                                                                                                                                                                                          SWITCHROOMS WITH MULTIPLE ACCESS POINTS SHALL HAVE A LIGHT SWITCH ADJACENT TO EACH ACCESS POINT WIRED FOR                                            DISTRIBUTION BOARD
+                                                                                                                                                                                          2-WAY LIGHTING.
+
+                                                                                                                                                                                          ALL LIGHT SWITCHES SHALL BE MOUNTED AT 1200-1400mm ABOVE FFL.
+
+                                                                                                                                                            EXTERNAL LIGHTING             EXTERNAL LIGHT FITTINGS SHALL BE INSTALLED AS SHOWN ON THE DRAWING
+
+                                                                                                                                                            POWER                        13A SOCKETS AND FUSED CONNECTION UNITS SHALL BE INSTALLED AS SHOWN ON THE DRAWING.
+                                                                                                                                                                                         RADIAL CIRCUITS SHALL BE USED FOR ALL POWER CIRCUITS.
+
+                                                                                                                                                                                          TEST EQUIPMENT SOCKETS SHALL LABELLED AS 'TEST EQUIPMENT SOCKET ONLY' AND SUPPLIED VIA A SEPARATE MCB.
+
+                                                                                                                                                                                          SOCKETS SHALL BE MOUNTED AT 500-1000mm ABOVE FFL AND FUSED CONNECTION UNITS SHALL BE MOUNTED TO SUIT THE
+                                                                                                                                                                                          FIXED EQUIPMENT THEY ARE SUPPLYING.
+
+                                                                                                                                                            CABLES AND                    ALL CABLE CORES SHALL BE IDENTIFIED USING PHASE OR NEUTRAL COLOURS IN ACCORDANCE WITH BS 7671 FOR THE
+                                                                                                                                                            CONTAINMENT                   COMPLETE LENGTH OF THE CABLE.
+
+                                                                                                                                                                                         ALL CABLES SHALL USE STRANDED COPPER CONDUCTORS WITH THE FOLLOWING MINIMUM CSA: CUT-OUT TAILS 25mm², LIGHTING
+                                                                                                                                                                                         1.5mm², POWER 4.0mm², FLEXIBLE LIGHTING 0.75mm², FLEXIBLE POWER 1.5mm².
+
+                                                                                                                                                                                          ALL CABLES, EXCEPT ARMOURED CABLES AND CUT-OUT TAILS, SHALL BE ENCLOSED IN CONDUIT OR TRUNKING.
+
+                                                                                                                                                                                          CABLE TRAY SHALL BE USED WHERE REQUIRED.
+
+                                                                                                                                                            BONDING                       ALL BONDING SHALL COMPLY WITH BS 7671.
+
+                                                                                                                                                            LABELLING                     ALL DISTRIBUTION BOARD WAYS SHALL BE PERMANENTLY LABELLED TO IDENTIFY CIRCUIT FUNCTION, CABLE SIZE AND
+                                                                                                                                                                                          PROTECTIVE DEVICE RATING.
+
+                                                                                                                                                                                          ALL LABELLING SHALL COMPLY WITH BS 7671.
+
+                                                                                                                                                            SUBSTATIONS WITH              ALL LIGHTING AND RTU SUPPLIES FROM AUXILIARY TERMINALS SHALL BE VIA AN ISOLATION TRANSFORMER.
+                                                                                                                                                            SEPARATE HV-LV
+                                                                                                                                                            EARTHS                        ALL SOCKETS SHALL BE DISCONNECTED OR REMOVED.
+
+                                                                                                                                                                                          REFER TO ECS 06-0023 FOR FURTHER INFORMATION.
+
+                                                                                                                                                            TESTING AND                   ON COMPLETION OF THE WORKS, THE INSTALLATION SHALL BE TESTED IN ACCORDANCE WITH BS 7671.
+                                                                                                                                                            CERTIFICATION
+                                                                                                                                                                                          AN ELECTRICAL INSTALLATION CERTIFICATE AND A SCHEDULE OF TEST RESULTS AS DETAILED IN BS 7671 SHALL BE FORWARDED
+                                                                                                                                                                                          TO UK POWER NETWORKS.
+
+PLAN VIEW
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                        Major update                              ST       TM
+                                                                                                                                                                                                                                                                                                                     B       27-11-25                                             PW      UKPN
+                                                                                                                                                                                                                                                                                                                                        ORIGINAL                                  UA       RDH
+                                                                                                                                                                                                                                                                                                                     A       26-10-18                                             UA      UKPN
+                                                                                                                                                                                                                                                                                                                                                                                Checked    Drn.
+                                                                                                                                                                                                                                                                                                                   Version     Date                    Description
+                                                                                                                                                                                                                                                                                                                                                                                Approved Designed
+
+
+
+
+                                                                                                                                                                                                                                                                                                                    TITLE
+                                                                                                                                                                                                                                                                                                                               GRP ENCLOSURE FOR A
+                                                                                                                                                                                                                                                                                                                           UNIT OR PADMOUNT SUBSTATION
+
+                                                                                                                                                                                                                                                                                                                                SMALL POWER & LIGHTING
+                                                                                                                                                                                                                                                                                                                    SCALE NTS                  @A1                   APPROVED            Version
+                                                                                                                                                                                                                                                                                                                    DRAWING NO.
+
+                                                                                                                                                                                                                                                                                                                    EDS 07-3102_01 SHEET 5 OF 5                                            B
+                                                                                                                                                                                                                                                                                                                    SITE
+                                                                                                                                                                                                                                                                                                                                        SECONDARY SUBSTATIONS
+            This UK Power Networks drawing illustrates good practice regarding health, safety, security and cost efficiency. In all scenarios, locations and site specific designs are to be formally agreed with UK Power Networks prior to construction.
+

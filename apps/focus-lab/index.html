@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070a12">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23070a12%22/%3E%3Cpath d=%22M32 8 Q48 32 32 56 Q16 32 32 8Z%22 fill=%22%234fd8ff%22 opacity=%22.85%22/%3E%3C/svg%3E">
+<title>Focus Lab — how a camera lens focuses</title>
+<style>
+:root{
+  --bg:#070a12; --glass:rgba(255,255,255,.055); --glass2:rgba(255,255,255,.09); --stroke:rgba(255,255,255,.12);
+  --text:#e8ecf6; --muted:#9aa3b8; --cyan:#4fd8ff; --amber:#ffb547; --yellow:#ffe066; --pink:#ff6fb5;
+  --green:#6dffa8; --violet:#a78bfa; --good:#5cf2a0; --warn:#ffc857; --bad:#ff6b6b; --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;background:
+  radial-gradient(1100px 700px at 5% -10%,rgba(79,216,255,.13),transparent 60%),
+  radial-gradient(900px 600px at 105% 5%,rgba(167,139,250,.14),transparent 60%),
+  radial-gradient(900px 700px at 50% 115%,rgba(255,181,71,.07),transparent 60%),var(--bg);background-attachment:fixed}
+button{font:inherit;color:inherit}
+.glass{background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r);
+  -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
+  box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07)}
+.app{display:flex;flex-direction:column;gap:12px;padding:10px;padding-top:max(10px,env(safe-area-inset-top));max-width:1900px;margin:0 auto}
+.top{display:flex;align-items:center;gap:12px;padding:2px 4px}
+.logo{flex:none;width:38px;height:38px;border-radius:12px;position:relative;
+  background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.9),rgba(79,216,255,.6) 25%,rgba(40,60,140,.9) 60%,#0b1026 72%);
+  box-shadow:0 0 0 2px rgba(255,255,255,.12),0 0 24px rgba(79,216,255,.35)}
+.top h1{font-size:17px;margin:0;font-weight:750;letter-spacing:.2px}
+.top p{margin:1px 0 0;color:var(--muted);font-size:12.5px;line-height:1.3}
+.stage{position:sticky;top:0;z-index:10;display:flex;flex-direction:column;gap:8px;margin:0 -10px;padding:8px 10px;
+  background:linear-gradient(rgba(7,10,18,.94),rgba(7,10,18,.86));-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--stroke)}
+.bench{position:relative;display:flex;flex-direction:column;overflow:hidden;padding:0}
+.bench canvas{display:block;width:100%;height:clamp(220px,32vh,380px);touch-action:none;-webkit-user-select:none;user-select:none}
+.legend{display:flex;gap:14px;overflow-x:auto;white-space:nowrap;padding:6px 12px;font-size:11.5px;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);scrollbar-width:none}
+.legend::-webkit-scrollbar{display:none}
+.legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.legend i.dash{background:repeating-linear-gradient(90deg,#cfd6e6 0 4px,transparent 4px 7px)!important;height:2px}
+.hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(10,14,28,.72);border:1px solid var(--stroke);color:#dfe6f5;pointer-events:none;transition:opacity .6s;white-space:nowrap}
+.hint.gone{opacity:0}
+.toast{position:absolute;left:50%;bottom:44px;transform:translate(-50%,10px);max-width:92%;font-size:12.5px;line-height:1.35;padding:8px 12px;border-radius:12px;background:rgba(20,24,44,.92);border:1px solid rgba(255,200,87,.45);color:#ffe7b0;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.row{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:8px}
+.preview{padding:6px;display:flex;align-items:center;justify-content:center;min-height:0;min-width:0}
+.frame{position:relative;overflow:hidden;border-radius:12px;background:#05060c;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.frame canvas{position:absolute;display:block}
+#pv-bg{left:-6%;top:-6%;width:112%;height:112%}
+.pv-tag{position:absolute;left:6px;top:6px;font-size:10.5px;padding:3px 7px;border-radius:999px;background:rgba(0,0,0,.55);color:#dfe6f5;letter-spacing:.02em}
+.pv-state{position:absolute;right:6px;bottom:6px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.6)}
+.afbox{position:absolute;left:50%;top:50%;width:18%;height:22%;transform:translate(-50%,-50%);pointer-events:none;
+  background:linear-gradient(currentColor,currentColor) 0 0/10px 2px no-repeat,linear-gradient(currentColor,currentColor) 0 0/2px 10px no-repeat,
+  linear-gradient(currentColor,currentColor) 100% 0/10px 2px no-repeat,linear-gradient(currentColor,currentColor) 100% 0/2px 10px no-repeat,
+  linear-gradient(currentColor,currentColor) 0 100%/10px 2px no-repeat,linear-gradient(currentColor,currentColor) 0 100%/2px 10px no-repeat,
+  linear-gradient(currentColor,currentColor) 100% 100%/10px 2px no-repeat,linear-gradient(currentColor,currentColor) 100% 100%/2px 10px no-repeat;color:rgba(255,255,255,.55)}
+.quick{padding:9px 10px;font-size:12px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.quick dl{margin:0;display:flex;flex-direction:column;gap:3px}
+.quick dl div{display:flex;justify-content:space-between;gap:6px}
+.quick dt{color:var(--muted)} .quick dd{margin:0;font-variant-numeric:tabular-nums;font-weight:650;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-flex;align-items:center;gap:6px;font-weight:750;font-size:12.5px;padding:4px 10px;border-radius:999px;align-self:flex-start;border:1px solid currentColor}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.s-good{color:var(--good)} .s-warn{color:var(--warn)} .s-bad{color:var(--bad)}
+.side{display:flex;flex-direction:column;gap:12px;min-height:0}
+.panel{padding:14px 14px 16px}
+.panel h2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:700}
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dots{display:flex;gap:2px}
+.dots button{width:30px;height:30px;border:0;background:none;padding:0;display:grid;place-items:center;cursor:pointer}
+.dots button span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.22);transition:.25s}
+.dots button.on span{background:var(--cyan);box-shadow:0 0 10px var(--cyan);width:22px;border-radius:6px}
+.guide h3{margin:4px 0 6px;font-size:18px;font-weight:750}
+.guide p{margin:0 0 12px;color:#cdd4e4;font-size:14.5px;line-height:1.5}
+.gbtns{display:grid;grid-template-columns:48px 1fr 48px;gap:8px}
+.gbtns .wide{grid-column:1/-1}
+.btn{min-height:46px;border-radius:14px;border:1px solid var(--stroke);background:var(--glass2);font-weight:650;font-size:14.5px;cursor:pointer;padding:0 12px;transition:transform .1s,background .2s;touch-action:manipulation}
+.btn:active{transform:scale(.97);background:rgba(255,255,255,.14)}
+.btn.primary{background:linear-gradient(135deg,#4fd8ff,#a78bfa);color:#0a0d1a;border:0;box-shadow:0 6px 24px rgba(79,216,255,.25)}
+.btn.ghost{background:transparent}
+.btn[hidden]{display:none}
+.ctl{margin:10px 0 2px;--acc:#4fd8ff}
+.lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:14px}
+.lab span{color:#dbe1ee}
+.lab output{font-variant-numeric:tabular-nums;font-weight:700;color:#fff;text-align:right;font-size:13.5px}
+.ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:-4px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:42px;background:transparent;margin:0;touch-action:pan-y;cursor:pointer;--p:50%}
+input[type=range]:focus{outline:none}
+input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:8px;background:linear-gradient(90deg,var(--acc) var(--p),rgba(255,255,255,.13) var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;margin-top:-11px;border:0;box-shadow:0 0 0 6px color-mix(in srgb,var(--acc) 30%,transparent),0 4px 12px rgba(0,0,0,.5)}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 8px color-mix(in srgb,var(--acc) 55%,transparent)}
+input[type=range]::-moz-range-track{height:8px;border-radius:8px;background:rgba(255,255,255,.13)}
+input[type=range]::-moz-range-progress{height:8px;border-radius:8px;background:var(--acc)}
+input[type=range]::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:#fff;border:0;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.btnrow{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin:14px 0 6px}
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.tog{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;border-radius:14px;border:1px solid var(--stroke);background:var(--glass2);font-size:13.5px;font-weight:600;text-align:left;cursor:pointer;touch-action:manipulation}
+.tog .sw{flex:none;width:36px;height:22px;border-radius:999px;background:rgba(255,255,255,.18);position:relative;transition:.2s}
+.tog .sw::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.tog[aria-pressed=true] .sw{background:var(--cyan)}
+.tog[aria-pressed=true] .sw::after{left:17px}
+.tog.amber[aria-pressed=true] .sw{background:var(--amber)}
+.sub{font-size:12px;color:var(--muted);margin:14px 0 6px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--stroke)}
+.seg button{min-height:40px;border:0;border-radius:10px;background:transparent;font-weight:650;font-size:13px;cursor:pointer;touch-action:manipulation}
+.seg button.on{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+#ctl-u2[hidden]{display:none}
+.eqwrap{display:flex;gap:12px;align-items:stretch}
+.eq{flex:1;min-width:0;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08)}
+.eq .big{font-size:17px;font-weight:700;letter-spacing:.02em;font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif}
+.eq .big i{color:var(--cyan)}
+.eq .num{font-variant-numeric:tabular-nums;font-size:14px;margin-top:4px;color:#fff;font-weight:600}
+.eq .dec{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted);margin-top:2px}
+.eq .note{font-size:12.5px;color:#cdd4e4;margin-top:6px;line-height:1.4}
+.gauge{flex:none;width:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);padding:6px}
+.gauge canvas{width:104px;height:84px;display:block}
+.gauge small{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.25}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-top:8px}
+.cell{padding:5px 8px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);min-width:0}
+.cell b{display:block;font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell span{display:block;font-variant-numeric:tabular-nums;font-weight:700;font-size:13.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.45;margin:10px 2px 0}
+@media (max-height:640px) and (max-width:959px){.stage{position:static}}
+@media (max-width:959px){.pv-tag{font-size:9.5px;padding:2px 6px;left:4px;top:4px}.pv-state{font-size:9.5px;right:4px;bottom:4px}}
+@media (min-width:960px) and (min-height:600px){
+  html,body{height:100%;overflow:hidden}
+  .app{display:grid;height:100vh;height:100dvh;padding:16px;gap:14px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(360px,410px);
+    grid-template-rows:auto minmax(0,1fr) minmax(0,clamp(240px,34vh,330px));
+    grid-template-areas:"head head side" "bench bench side" "preview numbers side"}
+  .stage,.row{display:contents}
+  .top{grid-area:head} .bench{grid-area:bench;min-height:0} .preview{grid-area:preview} .quick{display:none}
+  .numbers{grid-area:numbers;overflow:auto;min-height:0} .side{grid-area:side;overflow:auto;padding-right:2px}
+  .bench canvas{height:auto;flex:1;min-height:0}
+  .top h1{font-size:20px}
+  .side::-webkit-scrollbar,.numbers::-webkit-scrollbar{width:8px}
+  .side::-webkit-scrollbar-thumb,.numbers::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="logo" aria-hidden="true"></div>
+    <div><h1>Focus Lab</h1><p>How a camera lens brings the world into focus — drag the arrow, the lens or the sensor.</p></div>
+  </header>
+
+  <section class="stage">
+    <div class="bench glass">
+      <canvas id="bench" aria-label="Optical bench: object, convex lens and camera sensor, with light rays" role="img"></canvas>
+      <div class="hint" id="hint">↔ Drag the arrow, the lens or the sensor</div>
+      <div class="toast" id="toast"></div>
+      <div class="legend" aria-hidden="true">
+        <span><i style="background:var(--yellow)"></i>parallel → through F′</span>
+        <span><i style="background:var(--pink)"></i>through the centre</span>
+        <span><i style="background:var(--green)"></i>through F → parallel</span>
+        <span><i style="background:var(--cyan)"></i>ray fan through the aperture</span>
+        <span><i class="dash"></i>dashed = blocked by the iris (construction only)</span>
+        <span><i style="background:rgba(109,255,168,.5)"></i>depth of field</span>
+      </div>
+    </div>
+    <div class="row">
+      <div class="preview glass" id="preview">
+        <div class="frame" id="frame">
+          <canvas id="pv-bg"></canvas><canvas id="pv-a"></canvas><canvas id="pv-b"></canvas>
+          <div class="afbox"></div>
+          <div class="pv-tag">What the camera sees</div>
+          <div class="pv-state" id="pv-state">Sharp</div>
+        </div>
+      </div>
+      <div class="quick glass" id="quick">
+        <div class="pill s-good" id="q-status">In focus</div>
+        <dl>
+          <div><dt>Object <i>u</i></dt><dd id="q-u">–</dd></div>
+          <div><dt>Image <i>v</i></dt><dd id="q-v">–</dd></div>
+          <div><dt>Sensor</dt><dd id="q-s">–</dd></div>
+          <div><dt>Blur ⌀</dt><dd id="q-c">–</dd></div>
+          <div><dt>DoF</dt><dd id="q-dof">–</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="guide glass panel" id="guide">
+      <div class="ghead"><h2 id="g-step" style="margin:0">Step 1 of 6</h2><div class="dots" id="g-dots"></div></div>
+      <h3 id="g-title"></h3>
+      <p id="g-text"></p>
+      <div class="gbtns">
+        <button class="btn" id="g-prev" aria-label="Previous step">‹</button>
+        <button class="btn primary" id="g-show">Show me</button>
+        <button class="btn" id="g-next" aria-label="Next step">›</button>
+        <button class="btn ghost wide" id="g-extra" hidden></button>
+      </div>
+    </div>
+
+    <div class="controls glass panel">
+      <h2>Controls</h2>
+      <div class="ctl" style="--acc:#4fd8ff"><div class="lab"><span>Object distance <i>u</i></span><output id="o-u"></output></div>
+        <input type="range" id="s-u" min="0" max="1000" step="1" aria-label="Object distance"><div class="ends"><span>close</span><span>30 m</span></div></div>
+      <div class="ctl" style="--acc:#e8ecf6"><div class="lab"><span>Focus (moves the lens)</span><output id="o-focus"></output></div>
+        <input type="range" id="s-focus" min="0" max="1000" step="1" aria-label="Focus: lens position"><div class="ends"><span>lens back · far focus</span><span>lens forward · near focus</span></div></div>
+      <div class="ctl" style="--acc:#a78bfa"><div class="lab"><span>Sensor position (lens → sensor)</span><output id="o-vs"></output></div>
+        <input type="range" id="s-vs" min="0" max="1000" step="1" aria-label="Sensor position"></div>
+      <div class="ctl" style="--acc:#ffe066"><div class="lab"><span>Focal length <i>f</i></span><output id="o-f"></output></div>
+        <input type="range" id="s-f" min="0" max="1000" step="1" aria-label="Focal length"><div class="ends"><span>20 mm wide</span><span>200 mm tele</span></div></div>
+      <div class="ctl" style="--acc:#6dffa8"><div class="lab"><span>Aperture (f-number)</span><output id="o-N"></output></div>
+        <input type="range" id="s-N" min="0" max="24" step="1" aria-label="Aperture f-number"><div class="ends"><span>f/1.4 wide open</span><span>f/22 tiny hole</span></div></div>
+      <div class="btnrow"><button class="btn primary" id="b-af">Auto-focus</button><button class="btn" id="b-reset">Reset</button></div>
+      <div class="toggles">
+        <button class="tog amber" data-flag="show2" aria-pressed="false"><span class="sw"></span>Second object</button>
+        <button class="tog" data-flag="principal" aria-pressed="true"><span class="sw"></span>Principal rays</button>
+        <button class="tog" data-flag="fan" aria-pressed="true"><span class="sw"></span>Ray fan</button>
+        <button class="tog" data-flag="dof" aria-pressed="true"><span class="sw"></span>Depth of field</button>
+      </div>
+      <div class="ctl" id="ctl-u2" style="--acc:#ffb547" hidden><div class="lab"><span>Candle distance <i>u₂</i></span><output id="o-u2"></output></div>
+        <input type="range" id="s-u2" min="0" max="1000" step="1" aria-label="Candle distance"></div>
+      <div class="sub">Acceptable blur (circle of confusion limit)</div>
+      <div class="seg" id="coc"><button data-coc="0.02">0.02 mm</button><button data-coc="0.03" class="on">0.03 mm</button><button data-coc="0.05">0.05 mm</button></div>
+      <p class="foot">0.03 mm is the usual limit for a full-frame (36 × 24 mm) sensor. Focal lengths are full-frame equivalents.</p>
+    </div>
+
+  </aside>
+
+  <div class="numbers glass panel" id="numbers">
+    <h2>The numbers</h2>
+    <div class="eqwrap">
+      <div class="eq">
+        <div class="big">1/<i>f</i> = 1/<i>u</i> + 1/<i>v</i></div>
+        <div class="num" id="eq-num"></div>
+        <div class="dec" id="eq-dec"></div>
+        <div class="note" id="eq-note"></div>
+      </div>
+      <div class="gauge"><canvas id="gauge" width="104" height="84"></canvas><small>blur disc on the sensor<br>dashed ring = limit</small></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="foot">Thin-lens model, all distances measured from the lens. The preview exaggerates blur slightly so that the chosen limit is just visible on a small screen.</p>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- helpers ---------- */
+  function $(id) { return document.getElementById(id); }
+  function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  var STOPS = [1.4, 1.6, 1.8, 2, 2.2, 2.5, 2.8, 3.2, 3.5, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10, 11, 13, 14, 16, 18, 20, 22];
+  var U_MAX = 30000, F_MIN = 20, F_MAX = 200, REF_COC = 0.03;
+  var H1 = 1.1, H2 = 0.7; // object heights on the bench, in focal lengths
+
+  var DEFAULT = { f: 50, N: 2.8, u: 170, vs: 1 / (1 / 50 - 1 / 170), u2: 450, show2: false, principal: true, fan: true, dof: true, coc: 0.03 };
+  var S = {};
+  for (var k in DEFAULT) S[k] = DEFAULT[k];
+
+  function imgDist(u, f) { return 1 / (1 / f - 1 / u); }
+  function uMin() { return 1.05 * S.f; }
+  function vsMin() { return 0.8 * S.f; }
+  function vsMax() { return 6 * S.f; }
+  function nearestStop(N) { var b = 0; for (var i = 1; i < STOPS.length; i++) if (Math.abs(Math.log(STOPS[i] / N)) < Math.abs(Math.log(STOPS[b] / N))) b = i; return b; }
+  function blurAt(u) { var D = S.f / S.N; return D * Math.abs(1 - S.vs * (1 / S.f - 1 / u)); }
+
+  function calc() {
+    var f = S.f, N = S.N, u = S.u, vs = S.vs, D = f / N, c0 = S.coc;
+    var v = imgDist(u, f), c = blurAt(u);
+    var kk = c0 / D;
+    var invNear = (kk + vs / f - 1) / vs, invFar = (-kk + vs / f - 1) / vs;
+    var near = invNear > 0 ? 1 / invNear : Infinity;
+    var far = invFar > 0 ? 1 / invFar : Infinity;
+    return {
+      f: f, N: N, u: u, vs: vs, D: D, v: v, c: c, c0: c0, k: kk,
+      sFocus: vs > f ? 1 / (1 / f - 1 / vs) : Infinity,
+      near: near, far: far, H: f * f / (N * c0) + f, m: vs / u,
+      cInf: D * Math.abs(1 - vs / f),
+      c2: blurAt(S.u2), v2: imgDist(S.u2, f)
+    };
+  }
+  function fmtLen(mm) {
+    if (!isFinite(mm)) return '∞';
+    if (mm >= 10000) return (mm / 1000).toFixed(1) + ' m';
+    if (mm >= 1000) return (mm / 1000).toFixed(2) + ' m';
+    if (mm >= 100) return mm.toFixed(0) + ' mm';
+    return mm.toFixed(1) + ' mm';
+  }
+  function fmtBlur(c) { return c < 1 ? (c * 1000).toFixed(0) + ' µm' : c.toFixed(2) + ' mm'; }
+  function fmtNum(x) { return x >= 1000 ? x.toFixed(0) : x >= 100 ? x.toFixed(1) : x.toFixed(2); }
+  function fmtN(N) { var s = STOPS[nearestStop(N)]; return 'f/' + (Math.abs(s - N) < 0.05 ? s : N.toFixed(1)); }
+  function status(c, c0) {
+    var r = c / c0;
+    if (r <= 1) return { t: 'In focus', cls: 's-good', short: 'Sharp' };
+    if (r <= 2.5) return { t: 'Slightly soft', cls: 's-warn', short: 'Soft' };
+    return { t: 'Out of focus', cls: 's-bad', short: 'Blurry' };
+  }
+  function dofText(R) {
+    if (!isFinite(R.near)) return 'nothing sharp';
+    return fmtLen(R.near) + ' – ' + fmtLen(R.far);
+  }
+
+  /* ---------- canvas setup ---------- */
+  var cv = $('bench'), ctx = cv.getContext('2d');
+  var W = 300, H = 200, dpr = 1, raf = 0;
+  var offX = 0, offTw = null, drag = null, hover = null, chips = [];
+  var isDesk = window.matchMedia('(min-width:960px) and (min-height:600px)');
+
+  function resize() {
+    var r = cv.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    W = Math.max(1, r.width); H = Math.max(1, r.height);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    offX = 0;
+    fitPreview();
+    kick();
+  }
+  function view() {
+    var f = S.f;
+    var sc = Math.min(W / (8.4 * f), H / (5.0 * f));
+    var home = W - Math.max(1.15 * f * sc, 42);
+    var xS = home + offX;
+    return { sc: sc, home: home, xS: xS, xL: xS - S.vs * sc, ay: H * 0.47 };
+  }
+
+  /* ---------- drawing ---------- */
+  function draw() {
+    var V = view(), sc = V.sc, f = S.f, ay = V.ay, xL = V.xL, R = calc();
+    var D = R.D, a = D / 2, vs = S.vs;
+    function X(x) { return xL + x * sc; }
+    function Y(y) { return ay - y * sc; }
+    var xMinW = (-30 - xL) / sc, xMaxW = (W + 30 - xL) / sc;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    chips = [];
+
+    // grid
+    var step = f * sc / 2; while (step < 16) step *= 2;
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.beginPath();
+    for (var gx = ((xL % step) + step) % step; gx < W; gx += step) { ctx.moveTo(Math.round(gx) + .5, 0); ctx.lineTo(Math.round(gx) + .5, H); }
+    for (var gy = ((ay % step) + step) % step; gy < H; gy += step) { ctx.moveTo(0, Math.round(gy) + .5); ctx.lineTo(W, Math.round(gy) + .5); }
+    ctx.stroke();
+
+    // camera body behind the sensor
+    var bx = X(vs) - 8;
+    ctx.fillStyle = 'rgba(255,255,255,0.035)'; ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    roundRect(bx, 8, W - bx + 30, H - 52, 14); ctx.fill(); ctx.stroke();
+
+    // depth of field band
+    if (S.dof && isFinite(R.near)) {
+      var xa = isFinite(R.far) ? X(-R.far) : -20, xb = X(-R.near);
+      xa = Math.max(xa, -20); xb = Math.min(xb, X(0));
+      if (xb > xa + 0.5) {
+        var gg = ctx.createLinearGradient(0, 0, 0, H);
+        gg.addColorStop(0, 'rgba(109,255,168,0.02)'); gg.addColorStop(0.5, 'rgba(109,255,168,0.10)'); gg.addColorStop(1, 'rgba(109,255,168,0.02)');
+        ctx.fillStyle = gg; ctx.fillRect(xa, 0, xb - xa, H - 34);
+        ctx.strokeStyle = 'rgba(109,255,168,0.45)'; ctx.setLineDash([4, 4]); ctx.beginPath();
+        if (xa > 0) { ctx.moveTo(xa, 0); ctx.lineTo(xa, H - 34); }
+        ctx.moveTo(xb, 0); ctx.lineTo(xb, H - 34); ctx.stroke(); ctx.setLineDash([]);
+        var lx = clamp((Math.max(xa, 0) + xb) / 2, 50, W - 50);
+        ctx.font = '600 11px system-ui,sans-serif'; ctx.fillStyle = 'rgba(109,255,168,0.9)'; ctx.textAlign = 'center';
+        if (xb - Math.max(xa, 0) > 70) ctx.fillText('depth of field' + (isFinite(R.far) ? '' : ' → ∞'), lx, H - 40);
+      }
+      // depth of focus: sensor positions that would be acceptably sharp
+      var d1 = X(R.v * (1 - Math.min(R.k, 0.9))), d2 = X(R.v * (1 + R.k));
+      if (d2 - d1 < 3) { var mid = (d1 + d2) / 2; d1 = mid - 1.5; d2 = mid + 1.5; }
+      ctx.fillStyle = 'rgba(109,255,168,0.28)'; ctx.fillRect(d1, ay - 5, d2 - d1, 10);
+    }
+
+    // axis
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, ay + .5); ctx.lineTo(W, ay + .5); ctx.stroke();
+    // lens plane (construction)
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.setLineDash([2, 5]);
+    ctx.beginPath(); ctx.moveTo(X(0), 6); ctx.lineTo(X(0), H - 36); ctx.stroke(); ctx.setLineDash([]);
+
+    // focal points
+    ctx.font = '600 11px system-ui,sans-serif'; ctx.textAlign = 'center';
+    [[-f, 'F', 1], [f, 'F′', 1], [-2 * f, '2F', 0.45], [2 * f, '2F′', 0.45]].forEach(function (p) {
+      var px = X(p[0]); if (px < -10 || px > W + 10) return;
+      ctx.fillStyle = 'rgba(255,224,102,' + p[2] + ')';
+      ctx.beginPath(); ctx.arc(px, ay, p[2] === 1 ? 3.5 : 2.5, 0, 7); ctx.fill();
+      ctx.fillText(p[1], px, ay + 16);
+    });
+
+    // lens glass
+    var G = 0.5 * f; // glass half-height (mm)
+    var t = Math.max(7, 0.13 * f * sc);
+    var lg = ctx.createLinearGradient(X(0) - t, 0, X(0) + t, 0);
+    lg.addColorStop(0, 'rgba(120,200,255,0.10)'); lg.addColorStop(0.5, 'rgba(170,225,255,0.30)'); lg.addColorStop(1, 'rgba(120,200,255,0.10)');
+    ctx.fillStyle = lg; ctx.strokeStyle = (drag && drag.type === 'lens') || hover === 'lens' ? 'rgba(220,245,255,1)' : 'rgba(180,230,255,0.75)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(0), Y(G)); ctx.quadraticCurveTo(X(0) + t * 2, ay, X(0), Y(-G)); ctx.quadraticCurveTo(X(0) - t * 2, ay, X(0), Y(G)); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // rays
+    var fanClip = function (uo, ho, y) { // start point of an incoming ray, clipped to the view
+      var xo = -uo, yo = ho;
+      if (xo < xMinW) { var tt = (xMinW - xo) / (0 - xo); return [xMinW, yo + tt * (y - yo)]; }
+      return [xo, yo];
+    };
+    function fan(uo, ho, rgb, n, strong) {
+      var v = imgDist(uo, f);
+      var out = function (y) { return (y - ho) / uo - y / f; }; // thin lens: slope after = slope before - y/f
+      var yT = a + out(a) * vs, yB = -a + out(-a) * vs;
+      if (S.fan) {
+        var sT = fanClip(uo, ho, a), sB = fanClip(uo, ho, -a);
+        ctx.fillStyle = 'rgba(' + rgb + ',' + (strong ? 0.10 : 0.07) + ')';
+        ctx.beginPath(); ctx.moveTo(X(sT[0]), Y(sT[1])); ctx.lineTo(X(0), Y(a)); ctx.lineTo(X(0), Y(-a)); ctx.lineTo(X(sB[0]), Y(sB[1])); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(X(0), Y(a)); ctx.lineTo(X(vs), Y(yT)); ctx.lineTo(X(vs), Y(yB)); ctx.lineTo(X(0), Y(-a)); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = 'rgba(' + rgb + ',' + (strong ? 0.8 : 0.6) + ')'; ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        var i, y, s;
+        for (i = 0; i < n; i++) {
+          y = -a + 2 * a * i / (n - 1);
+          s = fanClip(uo, ho, y);
+          ctx.moveTo(X(s[0]), Y(s[1])); ctx.lineTo(X(0), Y(y));
+          ctx.lineTo(X(vs), Y(y + out(y) * vs));
+        }
+        ctx.stroke();
+        if (v > vs) {
+          var xe = Math.min(v + 0.3 * f, xMaxW);
+          ctx.setLineDash([3, 4]); ctx.strokeStyle = 'rgba(' + rgb + ',0.32)'; ctx.beginPath();
+          for (i = 0; i < n; i++) {
+            y = -a + 2 * a * i / (n - 1);
+            ctx.moveTo(X(vs), Y(y + out(y) * vs)); ctx.lineTo(X(xe), Y(y + out(y) * xe));
+          }
+          ctx.stroke(); ctx.setLineDash([]);
+        }
+      }
+      return { top: yT, bot: yB, v: v, yi: -ho * v / uo };
+    }
+    var h1 = H1 * f, h2 = H2 * f;
+    var F2 = null;
+    if (S.show2) F2 = fan(S.u2, h2, '255,181,71', 7, false);
+    var F1 = fan(S.u, h1, '79,216,255', 9, true);
+
+    if (S.principal) {
+      var u = S.u, v1 = F1.v;
+      var rays = [
+        { c: '255,224,102', y: h1, th: -h1 / f },            // parallel in, through F' out
+        { c: '255,111,181', y: 0, th: -h1 / u },             // through the centre, undeviated
+        { c: '109,255,168', y: -h1 * f / (u - f), th: 0 }    // through F in, parallel out
+      ];
+      rays.forEach(function (r) {
+        var blocked = Math.abs(r.y) > a + 1e-9;
+        ctx.strokeStyle = 'rgba(' + r.c + ',' + (blocked ? 0.5 : 0.95) + ')';
+        ctx.lineWidth = blocked ? 1.2 : 2;
+        ctx.setLineDash(blocked ? [6, 5] : []);
+        if (!blocked) { ctx.shadowColor = 'rgba(' + r.c + ',0.8)'; ctx.shadowBlur = 6; }
+        var s = fanClip(u, h1, r.y);
+        ctx.beginPath(); ctx.moveTo(X(s[0]), Y(s[1])); ctx.lineTo(X(0), Y(r.y)); ctx.lineTo(X(vs), Y(r.y + r.th * vs)); ctx.stroke();
+        ctx.shadowBlur = 0;
+        if (v1 > vs) {
+          var xe = Math.min(v1 + 0.25 * f, xMaxW);
+          ctx.setLineDash([3, 4]); ctx.strokeStyle = 'rgba(' + r.c + ',0.35)'; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(X(vs), Y(r.y + r.th * vs)); ctx.lineTo(X(xe), Y(r.y + r.th * xe)); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      });
+    }
+
+    // iris (aperture blades) on top of the rays
+    var irisTop = G + 0.06 * f;
+    ctx.fillStyle = 'rgba(20,22,34,0.95)'; ctx.strokeStyle = 'rgba(167,139,250,0.9)'; ctx.lineWidth = 1;
+    var iw = 6;
+    if (irisTop > a) {
+      ctx.fillRect(X(0) - iw / 2, Y(irisTop), iw, (irisTop - a) * sc);
+      ctx.fillRect(X(0) - iw / 2, Y(-a), iw, (irisTop - a) * sc);
+      ctx.beginPath(); ctx.moveTo(X(0) - iw / 2 - 2, Y(a) + .5); ctx.lineTo(X(0) + iw / 2 + 2, Y(a) + .5);
+      ctx.moveTo(X(0) - iw / 2 - 2, Y(-a) - .5); ctx.lineTo(X(0) + iw / 2 + 2, Y(-a) - .5); ctx.stroke();
+    }
+    ctx.font = '600 11px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(220,235,255,0.9)';
+    ctx.fillText('f ' + Math.round(f) + ' mm · ' + fmtN(S.N), clamp(X(0), 60, W - 60), Math.max(Y(irisTop) - 8, 14));
+
+    // image (ghost arrow)
+    if (F1.v < xMaxW + 2 * f) {
+      var ix = X(F1.v), iy = Y(F1.yi);
+      ctx.strokeStyle = 'rgba(79,216,255,0.55)'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(ix, ay); ctx.lineTo(ix, iy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(79,216,255,0.55)'; arrowHead(ix, iy, 1, 7);
+      ctx.fillStyle = '#fff'; ctx.shadowColor = '#4fd8ff'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(ix, iy, 3.2, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+      if (ix < W - 20) {
+        ctx.font = '600 11px system-ui,sans-serif'; ctx.fillStyle = 'rgba(160,230,255,0.95)'; ctx.textAlign = ix > W - 70 ? 'right' : 'center';
+        ctx.fillText('image', ix, iy - ay > 22 ? Math.min(iy + 15, H - 40) : iy - 9);
+      }
+    }
+    if (X(F1.v) > W - 8) chipRight('image at v = ' + fmtLen(F1.v) + ' →', ay + 24, '79,216,255');
+
+    // objects
+    var ox = X(-S.u);
+    if (S.show2) drawCandle(X(-S.u2), ay, h2 * sc, Math.max(8, 0.16 * f * sc), (drag && drag.type === 'obj2') || hover === 'obj2');
+    if (ox > -10) {
+      ctx.strokeStyle = '#4fd8ff'; ctx.fillStyle = '#4fd8ff'; ctx.lineWidth = (drag && drag.type === 'obj') || hover === 'obj' ? 5 : 4;
+      ctx.shadowColor = 'rgba(79,216,255,0.9)'; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.moveTo(ox, ay); ctx.lineTo(ox, Y(h1) + 8); ctx.stroke();
+      arrowHead(ox, Y(h1), -1, 11);
+      ctx.beginPath(); ctx.arc(ox, ay, 4, 0, 7); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // sensor
+    var sx = X(vs);
+    var sg = ctx.createLinearGradient(sx - 3, 0, sx + 4, 0);
+    sg.addColorStop(0, '#6d5bd0'); sg.addColorStop(1, '#2a2160');
+    ctx.fillStyle = sg; ctx.strokeStyle = (drag && drag.type === 'sensor') || hover === 'sensor' ? '#fff' : 'rgba(167,139,250,0.9)'; ctx.lineWidth = 1;
+    roundRect(sx - 3, 46, 7, H - 46 - 44, 3); ctx.fill(); ctx.stroke();
+    ctx.font = '700 10.5px system-ui,sans-serif'; ctx.fillStyle = 'rgba(200,190,255,0.9)';
+    ctx.textAlign = sx > W - 30 ? 'right' : 'center';
+    ctx.fillText('SENSOR', sx > W - 30 ? W - 4 : sx, H - 32);
+
+    // blur marks on the sensor
+    function blurMark(F, rgb) {
+      var y1 = Y(Math.max(F.top, F.bot)), y2 = Y(Math.min(F.top, F.bot));
+      if (y2 - y1 < 2) { var m = (y1 + y2) / 2; y1 = m - 1; y2 = m + 1; }
+      ctx.strokeStyle = 'rgba(' + rgb + ',1)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(' + rgb + ',1)'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.moveTo(sx + .5, y1); ctx.lineTo(sx + .5, y2); ctx.stroke();
+      ctx.shadowBlur = 0; ctx.lineCap = 'butt';
+      ctx.strokeStyle = 'rgba(' + rgb + ',0.6)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.ellipse(sx + .5, (y1 + y2) / 2, Math.max(2.5, (y2 - y1) * 0.18), (y2 - y1) / 2 + 2, 0, 0, 7); ctx.stroke();
+    }
+    if (S.show2 && F2) blurMark(F2, '255,181,71');
+    blurMark(F1, '79,216,255');
+
+    // dimension lines
+    var yd = H - 14;
+    ctx.lineWidth = 1; ctx.font = '600 11px system-ui,sans-serif'; ctx.textAlign = 'center';
+    dim(Math.max(ox, 4), X(0) - 2, yd, 'rgba(207,231,255,0.8)', 'u = ' + fmtLen(S.u));
+    dim(X(0) + 2, Math.min(X(F1.v), W - 4), yd, 'rgba(79,216,255,0.95)', 'v = ' + fmtLen(F1.v));
+
+    // off-screen chips for far objects
+    if (ox < 4) chipLeft('◀ arrow ' + fmtLen(S.u), ay + Math.min(0.55 * f * sc + 26, (H - 50 - ay) * 0.7), '79,216,255', 'objchip');
+    if (S.show2 && X(-S.u2) < 4) chipLeft('◀ candle ' + fmtLen(S.u2), Math.max(ay - 0.9 * f * sc - 20, 60), '255,181,71', 'obj2chip');
+
+    // knobs
+    var kb = H - 50, kt = 28;
+    if (ox >= 4) knob(ox, kb, '79,216,255', 'obj', ay);
+    knob(X(0), kb, '220,240,255', 'lens', ay);
+    knob(sx, kt, '167,139,250', 'sensor', ay);
+    if (S.show2 && X(-S.u2) >= 4) knob(X(-S.u2), kt, '255,181,71', 'obj2', ay);
+
+    // scale bar
+    var cands = [1, 2, 5, 10, 20, 50, 100, 200, 500], L = cands[0];
+    for (var ci = 0; ci < cands.length; ci++) { if (cands[ci] * sc <= 90) L = cands[ci]; }
+    var sbx = 10, k2x = X(-S.u2);
+    if (S.show2 && k2x >= 4 && k2x < L * sc + 70) sbx = k2x + 24;
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(sbx, 14); ctx.lineTo(sbx, 20); ctx.lineTo(sbx + L * sc, 20); ctx.lineTo(sbx + L * sc, 14); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(L + ' mm', sbx + 4 + L * sc, 21);
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function arrowHead(x, y, dir, s) { // dir -1 = pointing up, 1 = pointing down
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - s * 0.7, y - dir * s * 1.2); ctx.lineTo(x + s * 0.7, y - dir * s * 1.2); ctx.closePath(); ctx.fill();
+  }
+  function dim(x1, x2, y, col, label) {
+    if (x2 - x1 < 4) return;
+    ctx.strokeStyle = col; ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+    ctx.moveTo(x1, y - 4); ctx.lineTo(x1, y + 4); ctx.moveTo(x2, y - 4); ctx.lineTo(x2, y + 4); ctx.stroke();
+    var tw = ctx.measureText(label).width + 10, cx = clamp((x1 + x2) / 2, tw / 2 + 2, W - tw / 2 - 2);
+    ctx.fillStyle = 'rgba(8,11,22,0.85)'; ctx.fillRect(cx - tw / 2, y - 8, tw, 15);
+    ctx.fillStyle = col; ctx.fillText(label, cx, y + 4);
+  }
+  function knob(x, y, rgb, id, ay) {
+    var active = (drag && drag.type === id) || hover === id;
+    var r = active ? 16 : 13;
+    ctx.strokeStyle = 'rgba(' + rgb + ',0.25)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(x, y + (y > ay ? -r : r)); ctx.lineTo(x, ay); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(' + rgb + ',' + (active ? 1 : 0.88) + ')';
+    ctx.shadowColor = 'rgba(' + rgb + ',0.8)'; ctx.shadowBlur = active ? 16 : 8;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = 'rgba(10,12,24,0.85)';
+    ctx.beginPath(); ctx.moveTo(x - 8, y); ctx.lineTo(x - 3, y - 4.5); ctx.lineTo(x - 3, y + 4.5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 8, y); ctx.lineTo(x + 3, y - 4.5); ctx.lineTo(x + 3, y + 4.5); ctx.closePath(); ctx.fill();
+  }
+  function chipLeft(text, y, rgb, id) {
+    ctx.font = '700 11.5px system-ui,sans-serif';
+    var w = ctx.measureText(text).width + 20, h = 28, x = 6;
+    ctx.fillStyle = 'rgba(8,11,22,0.88)'; ctx.strokeStyle = 'rgba(' + rgb + ',0.9)'; ctx.lineWidth = 1.2;
+    roundRect(x, y - h / 2, w, h, 14); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(' + rgb + ',1)'; ctx.textAlign = 'left'; ctx.fillText(text, x + 10, y + 4);
+    chips.push({ id: id, x: x, y: y - h / 2 - 8, w: w, h: h + 16 });
+  }
+  function chipRight(text, y, rgb) {
+    ctx.font = '700 11px system-ui,sans-serif';
+    var w = ctx.measureText(text).width + 18, h = 24, x = W - w - 6;
+    ctx.fillStyle = 'rgba(8,11,22,0.88)'; ctx.strokeStyle = 'rgba(' + rgb + ',0.8)'; ctx.lineWidth = 1;
+    roundRect(x, y - h / 2, w, h, 12); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(' + rgb + ',1)'; ctx.textAlign = 'left'; ctx.fillText(text, x + 9, y + 4);
+  }
+  function drawCandle(x, ay, hpx, wpx, active) {
+    if (x < -20) return;
+    var bodyH = hpx * 0.74, flameH = hpx - bodyH;
+    ctx.fillStyle = active ? '#fff3d6' : '#f3e2bf';
+    ctx.shadowColor = 'rgba(255,181,71,0.6)'; ctx.shadowBlur = active ? 14 : 6;
+    roundRect(x - wpx / 2, ay - bodyH, wpx, bodyH, 2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#3a2a18'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, ay - bodyH); ctx.lineTo(x, ay - bodyH - flameH * 0.2); ctx.stroke();
+    var fy = ay - hpx, gr = ctx.createRadialGradient(x, ay - bodyH - flameH * 0.35, 1, x, ay - bodyH - flameH * 0.35, flameH);
+    gr.addColorStop(0, '#fffbe0'); gr.addColorStop(0.4, '#ffc347'); gr.addColorStop(1, 'rgba(255,120,30,0)');
+    ctx.fillStyle = gr; ctx.shadowColor = '#ffb547'; ctx.shadowBlur = 16;
+    ctx.beginPath(); ctx.moveTo(x, fy);
+    ctx.quadraticCurveTo(x + flameH * 0.45, ay - bodyH - flameH * 0.35, x, ay - bodyH - flameH * 0.05);
+    ctx.quadraticCurveTo(x - flameH * 0.45, ay - bodyH - flameH * 0.35, x, fy); ctx.fill(); ctx.shadowBlur = 0;
+  }
+
+  /* ---------- interaction ---------- */
+  function ptr(e) { var r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function hitTest(p) {
+    var V = view(), sc = V.sc;
+    for (var i = 0; i < chips.length; i++) {
+      var c = chips[i]; if (p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h) return c.id;
+    }
+    var items = [
+      { id: 'lens', x: V.xL, ky: H - 50 },
+      { id: 'sensor', x: V.xL + S.vs * sc, ky: 28 },
+      { id: 'obj', x: V.xL - S.u * sc, ky: H - 50 }
+    ];
+    if (S.show2) items.push({ id: 'obj2', x: V.xL - S.u2 * sc, ky: 28 });
+    var best = null, bs = 1e9;
+    items.forEach(function (it) {
+      if (it.x < 0 || it.x > W) return;
+      var dk = Math.hypot(p.x - it.x, p.y - it.ky), score;
+      if (dk < 30) score = dk; else if (Math.abs(p.x - it.x) < 24) score = Math.abs(p.x - it.x) + 20; else return;
+      if (score < bs) { bs = score; best = it.id; }
+    });
+    return best;
+  }
+  cv.addEventListener('pointerdown', function (e) {
+    var p = ptr(e), id = hitTest(p);
+    if (!id) return;
+    e.preventDefault();
+    stopTween();
+    var V = view();
+    drag = { type: id, pid: e.pointerId, x0: p.x, u0: S.u, u20: S.u2, vs0: S.vs, xL0: V.xL, sc: V.sc, home: V.home };
+    try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    cv.style.cursor = 'grabbing';
+    hideHint();
+    kick();
+  });
+  cv.addEventListener('pointermove', function (e) {
+    var p = ptr(e);
+    if (!drag) {
+      var h = hitTest(p);
+      if (h !== hover) { hover = h; cv.style.cursor = h ? 'grab' : 'default'; kick(); }
+      return;
+    }
+    if (e.pointerId !== drag.pid) return;
+    var sc = drag.sc, xL = drag.xL0, dx = p.x - drag.x0, uNew;
+    if (drag.type === 'obj' || drag.type === 'obj2') {
+      if (p.x > 12) uNew = (xL - p.x) / sc;
+      else uNew = (xL - 12) / sc * Math.exp((12 - p.x) / 45);
+      uNew = clamp(uNew, uMin(), U_MAX);
+      if (drag.type === 'obj') S.u = uNew; else S.u2 = uNew;
+    } else if (drag.type === 'objchip' || drag.type === 'obj2chip') {
+      uNew = clamp((drag.type === 'objchip' ? drag.u0 : drag.u20) * Math.exp(-dx / 90), uMin(), U_MAX);
+      if (drag.type === 'objchip') S.u = uNew; else S.u2 = uNew;
+    } else if (drag.type === 'lens') {
+      // the object and sensor stay put; moving the lens trades u against the lens-sensor distance
+      var L = drag.u0 + drag.vs0, xS = drag.home + offX;
+      var vsN = clamp((xS - p.x) / sc, vsMin(), Math.min(vsMax(), L - uMin()));
+      S.vs = vsN; S.u = L - vsN;
+      if (S.show2) S.u2 = Math.max(uMin(), drag.u20 + (drag.vs0 - vsN));
+    } else if (drag.type === 'sensor') {
+      S.vs = clamp((p.x - xL) / sc, vsMin(), vsMax());
+      offX = xL + S.vs * sc - drag.home; // keep the lens still on screen while the sensor follows the finger
+    }
+    syncUI(); kick();
+  });
+  function endDrag(e) {
+    if (!drag || (e && e.pointerId !== drag.pid)) return;
+    if (drag.type === 'sensor' && offX !== 0) offTw = { from: offX, t0: performance.now() };
+    drag = null; cv.style.cursor = 'default';
+    kick();
+  }
+  cv.addEventListener('pointerup', endDrag);
+  cv.addEventListener('pointercancel', endDrag);
+  cv.addEventListener('pointerleave', function () { if (!drag && hover) { hover = null; kick(); } });
+
+  var hintGone = false;
+  function hideHint() { if (!hintGone) { hintGone = true; $('hint').classList.add('gone'); } }
+
+  var toastTimer = 0;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3800);
+  }
+
+  /* ---------- tweening ---------- */
+  var tw = null, pendingTimer = 0;
+  var LOGKEYS = { u: 1, u2: 1, N: 1, f: 1 };
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function tweenTo(tgt, ms, done) {
+    var from = {};
+    for (var key in tgt) from[key] = S[key];
+    tw = { from: from, to: tgt, t0: performance.now(), ms: reduceMotion.matches ? 1 : (ms || 800), done: done };
+    kick();
+  }
+  function stopTween() { tw = null; clearTimeout(pendingTimer); }
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function stepTween(now) {
+    if (!tw) return;
+    var t = clamp((now - tw.t0) / tw.ms, 0, 1), e = ease(t);
+    for (var key in tw.to) {
+      var a = tw.from[key], b = tw.to[key];
+      S[key] = LOGKEYS[key] ? Math.exp(lerp(Math.log(a), Math.log(b), e)) : lerp(a, b, e);
+    }
+    if (t >= 1) { var d = tw.done; tw = null; if (d) d(); }
+    syncUI();
+  }
+
+  function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+  function frame(now) {
+    raf = 0;
+    stepTween(now);
+    if (offTw && !drag) {
+      var t = clamp((now - offTw.t0) / 380, 0, 1);
+      offX = offTw.from * (1 - ease(t));
+      if (t >= 1) { offTw = null; offX = 0; }
+    }
+    draw();
+    updateReadouts();
+    if (tw || offTw) kick();
+  }
+
+  /* ---------- sliders & UI ---------- */
+  var sU = $('s-u'), sU2 = $('s-u2'), sFoc = $('s-focus'), sVs = $('s-vs'), sF = $('s-f'), sN = $('s-N');
+  function uToT(u) { return (Math.log(u) - Math.log(uMin())) / (Math.log(U_MAX) - Math.log(uMin())) * 1000; }
+  function tToU(t) { return Math.exp(lerp(Math.log(uMin()), Math.log(U_MAX), t / 1000)); }
+  function focusRange() { var L = S.u + S.vs; return [vsMin(), Math.max(vsMin() + 0.01, Math.min(vsMax(), L - uMin()))]; }
+  function setSlider(el, v) { el.value = v; el.style.setProperty('--p', ((v - el.min) / (el.max - el.min) * 100) + '%'); }
+
+  function syncUI() {
+    setSlider(sU, clamp(uToT(S.u), 0, 1000));
+    setSlider(sU2, clamp(uToT(S.u2), 0, 1000));
+    var fr = focusRange();
+    setSlider(sFoc, clamp((S.vs - fr[0]) / (fr[1] - fr[0]) * 1000, 0, 1000));
+    setSlider(sVs, clamp((S.vs - vsMin()) / (vsMax() - vsMin()) * 1000, 0, 1000));
+    setSlider(sF, clamp((Math.log(S.f) - Math.log(F_MIN)) / (Math.log(F_MAX) - Math.log(F_MIN)) * 1000, 0, 1000));
+    setSlider(sN, nearestStop(S.N));
+    var sF2 = S.vs > S.f ? 1 / (1 / S.f - 1 / S.vs) : Infinity;
+    $('o-u').textContent = fmtLen(S.u);
+    $('o-u2').textContent = fmtLen(S.u2);
+    $('o-focus').textContent = 'sharpest at ' + (isFinite(sF2) ? fmtLen(sF2) : '∞ (beyond)');
+    $('o-vs').textContent = fmtLen(S.vs);
+    $('o-f').textContent = Math.round(S.f) + ' mm';
+    $('o-N').textContent = fmtN(S.N) + '  ·  ⌀ ' + (S.f / S.N).toFixed(1) + ' mm';
+    Array.prototype.forEach.call(document.querySelectorAll('.tog'), function (b) { b.setAttribute('aria-pressed', S[b.getAttribute('data-flag')] ? 'true' : 'false'); });
+    $('ctl-u2').hidden = !S.show2;
+    Array.prototype.forEach.call(document.querySelectorAll('#coc button'), function (b) { b.classList.toggle('on', Math.abs(parseFloat(b.getAttribute('data-coc')) - S.coc) < 1e-6); });
+  }
+  function userInput() { stopTween(); hideHint(); syncUI(); kick(); }
+
+  sU.addEventListener('input', function () { S.u = clamp(tToU(+sU.value), uMin(), U_MAX); userInput(); });
+  sU2.addEventListener('input', function () { S.u2 = clamp(tToU(+sU2.value), uMin(), U_MAX); userInput(); });
+  sFoc.addEventListener('input', function () {
+    var fr = focusRange(), L = S.u + S.vs;
+    var vs = lerp(fr[0], fr[1], +sFoc.value / 1000);
+    if (S.show2) S.u2 = Math.max(uMin(), S.u2 + (S.vs - vs));
+    S.vs = vs; S.u = L - vs; userInput();
+  });
+  sVs.addEventListener('input', function () { S.vs = lerp(vsMin(), vsMax(), +sVs.value / 1000); userInput(); });
+  sF.addEventListener('input', function () {
+    setF(Math.round(Math.exp(lerp(Math.log(F_MIN), Math.log(F_MAX), +sF.value / 1000)))); userInput();
+  });
+  sN.addEventListener('input', function () { S.N = STOPS[+sN.value]; userInput(); });
+
+  function setF(nf) {
+    // behave like a parfocal zoom: keep the same focus distance when the focal length changes
+    var oldF = S.f, s = S.vs > oldF ? 1 / (1 / oldF - 1 / S.vs) : Infinity, ratio = S.vs / oldF;
+    S.f = nf;
+    S.u = Math.max(S.u, uMin()); S.u2 = Math.max(S.u2, uMin());
+    if (isFinite(s)) S.vs = imgDist(Math.max(s, 1.2 * nf), nf); else S.vs = nf * ratio;
+    S.vs = clamp(S.vs, vsMin(), vsMax());
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.tog'), function (b) {
+    b.addEventListener('click', function () {
+      var fl = b.getAttribute('data-flag'); S[fl] = !S[fl];
+      if (fl === 'show2' && S.show2 && Math.abs(Math.log(S.u2 / S.u)) < 0.3) S.u2 = clamp(S.u * 2.4, uMin(), U_MAX);
+      userInput();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#coc button'), function (b) {
+    b.addEventListener('click', function () { S.coc = parseFloat(b.getAttribute('data-coc')); userInput(); });
+  });
+
+  function autofocus(quiet) {
+    stopTween();
+    var f = S.f, L = S.u + S.vs, disc = L * L - 4 * L * f;
+    // move the lens (object and sensor fixed): u + v = L with 1/u + 1/v = 1/f
+    if (disc >= 0) {
+      var u = (L + Math.sqrt(disc)) / 2, vs = L - u;
+      if (vs >= vsMin() && vs <= vsMax() && u >= uMin()) {
+        var tgt = { u: u, vs: vs };
+        if (S.show2) tgt.u2 = Math.max(uMin(), S.u2 + (S.vs - vs));
+        tweenTo(tgt, 650); return;
+      }
+    }
+    var v = imgDist(S.u, f);
+    if (v <= vsMax()) { tweenTo({ vs: v }, 650); if (!quiet) toast('Too close to focus by moving the lens alone, so the sensor was moved back instead (extra extension).'); }
+    else { tweenTo({ vs: vsMax() }, 650); if (!quiet) toast('Too close to focus even at maximum extension — move the object further away.'); }
+  }
+  $('b-af').addEventListener('click', function () { hideHint(); autofocus(false); });
+  $('b-reset').addEventListener('click', function () {
+    stopTween(); S.show2 = DEFAULT.show2; S.principal = true; S.fan = true; S.dof = true; S.coc = DEFAULT.coc;
+    syncUI(); tweenTo({ f: DEFAULT.f, N: DEFAULT.N, u: DEFAULT.u, vs: DEFAULT.vs, u2: DEFAULT.u2 }, 700);
+  });
+
+  /* ---------- guided steps ---------- */
+  function go(num, flags, ms, done) {
+    stopTween(); hideHint();
+    if (flags) for (var key in flags) S[key] = flags[key];
+    syncUI();
+    tweenTo(num, ms || 900, done);
+  }
+  var STEPS = [
+    { t: 'What a lens does',
+      p: 'A convex lens bends light. Rays leaving one point on the object spread out, hit the lens and are bent back together, so they meet again at a single point behind it. That meeting point is the image — and it is upside down. Three “textbook” rays make it easy to find.',
+      show: function () { go({ f: 50, N: 4, u: 200, vs: imgDist(200, 50), u2: 600 }, { show2: false, principal: true, fan: true }); } },
+    { t: 'The focal point',
+      p: 'Light arriving parallel to the axis is bent through one special spot: the focal point F′, exactly one focal length (f) behind the lens. Something far away sends in almost parallel light, so its image lands almost exactly on F′. Here the arrow is 20 m away and v is barely more than f.',
+      show: function () { go({ f: 50, N: 4, u: 20000, vs: imgDist(20000, 50) }, { show2: false, principal: true, fan: true }); },
+      extra: { label: 'Now bring it close (sensor stays put)', run: function () { go({ u: 150 }, null, 1400); } } },
+    { t: 'Focusing means moving the lens',
+      p: 'The sensor is fixed inside the camera body, so to focus, the lens itself moves. Closer subjects form their image further back, so the lens has to move away from the sensor until v lands exactly on it. Watch it happen, then try dragging the lens yourself until the blur drops to almost nothing.',
+      show: function () {
+        go({ f: 50, N: 2.8, u: 200, vs: 50.3 }, { show2: false, principal: true, fan: true }, 800, function () {
+          pendingTimer = setTimeout(function () { autofocus(true); }, 450);
+        });
+      },
+      extra: { label: 'Throw it out of focus again', run: function () { var L = S.u + S.vs; go({ vs: 50.3, u: L - 50.3 }, null, 700); } } },
+    { t: 'Out of focus means blur circles',
+      p: 'If the sensor is not exactly at the image point, the cone of light is cut before it comes to a point — or after it has crossed over. Each point on the object becomes a little disc: the circle of confusion. Tiny discs still look sharp; bigger ones look soft. Watch the preview.',
+      show: function () { go({ f: 50, N: 2, u: 150, vs: imgDist(150, 50) * 1.15 }, { show2: false, principal: true, fan: true }); },
+      extra: { label: 'Put the sensor in front instead', run: function () { go({ vs: imgDist(S.u, S.f) * 0.93 }, null, 800); } } },
+    { t: 'Aperture and depth of field',
+      p: 'The f-number is the focal length divided by the width of the opening, so f/16 is a far smaller hole than f/1.4. A narrower cone makes smaller blur discs everywhere, so more of the scene stays acceptably sharp — that zone is the depth of field (the green band). With this 20 mm lens at f/1.4 only the arrow is sharp; stop down to f/16 and the candle joins it.',
+      show: function () { go({ f: 20, N: 1.4, u: 100, vs: imgDist(100, 20), u2: 108 }, { show2: true, principal: false, fan: true, dof: true }); },
+      extra: { label: 'Stop down to f/16', run: function () { go({ N: 16 }, null, 1200); } } },
+    { t: 'Close-ups need more extension',
+      p: 'As the subject gets closer, v grows quickly. At life size (1:1, where u = 2f) the image forms two focal lengths behind the lens, so the lens must sit 2f from the sensor. That is why macro lenses stretch out so far and why extension tubes exist. Notice how wafer-thin the depth of field is, even at f/8.',
+      show: function () { go({ f: 50, N: 8, u: 100, vs: 100 }, { show2: false, principal: true, fan: true, dof: true }); },
+      extra: { label: 'Try half life size (1:2)', run: function () { go({ u: 150, vs: 75 }, null, 900); } } }
+  ];
+  var stepIx = 0;
+  var dots = $('g-dots');
+  STEPS.forEach(function (s, i) {
+    var b = document.createElement('button'); b.setAttribute('aria-label', 'Step ' + (i + 1)); b.innerHTML = '<span></span>';
+    b.addEventListener('click', function () { setStep(i); }); dots.appendChild(b);
+  });
+  function setStep(i) {
+    stepIx = clamp(i, 0, STEPS.length - 1);
+    var s = STEPS[stepIx];
+    $('g-step').textContent = 'Step ' + (stepIx + 1) + ' of ' + STEPS.length;
+    $('g-title').textContent = s.t; $('g-text').textContent = s.p;
+    var ex = $('g-extra'); ex.hidden = !s.extra; if (s.extra) ex.textContent = s.extra.label;
+    Array.prototype.forEach.call(dots.children, function (d, j) { d.classList.toggle('on', j === stepIx); });
+    $('g-prev').disabled = stepIx === 0; $('g-next').disabled = stepIx === STEPS.length - 1;
+    $('g-prev').style.opacity = stepIx === 0 ? 0.4 : 1; $('g-next').style.opacity = stepIx === STEPS.length - 1 ? 0.4 : 1;
+  }
+  $('g-prev').addEventListener('click', function () { setStep(stepIx - 1); STEPS[stepIx].show(); });
+  $('g-next').addEventListener('click', function () { setStep(stepIx + 1); STEPS[stepIx].show(); });
+  $('g-show').addEventListener('click', function () { STEPS[stepIx].show(); });
+  $('g-extra').addEventListener('click', function () { var s = STEPS[stepIx]; if (s.extra) s.extra.run(); });
+
+  /* ---------- readouts ---------- */
+  var CELLS = [['u', 'Object u'], ['v', 'Image v'], ['vs', 'Lens → sensor'], ['f', 'Focal length'], ['N', 'Aperture'], ['c', 'Blur ⌀'],
+    ['st', 'Focus'], ['sf', 'Sharpest at'], ['near', 'DoF near'], ['far', 'DoF far'], ['tot', 'DoF total'], ['hyp', 'Hyperfocal'], ['m', 'Magnification'], ['c2', 'Candle blur']];
+  var grid = $('grid'), cellEls = {};
+  CELLS.forEach(function (c) {
+    var d = document.createElement('div'); d.className = 'cell'; d.innerHTML = '<b>' + c[1] + '</b><span>–</span>';
+    grid.appendChild(d); cellEls[c[0]] = d;
+  });
+  function setCell(key, txt, cls) { var s = cellEls[key].lastChild; s.textContent = txt; s.className = cls || ''; }
+
+  var gcv = $('gauge'), gctx = gcv.getContext('2d');
+  function sizeGauge() { gcv.width = 104 * dpr; gcv.height = 84 * dpr; }
+  function drawGauge(R) {
+    gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    gctx.clearRect(0, 0, 104, 84);
+    var cx = 52, cy = 38, unit = 12; // the acceptable-blur limit is drawn 12 px across
+    function disc(c, rgb) {
+      var d = Math.min(unit * c / R.c0, 150), r = Math.max(d / 2, 1.2);
+      var g = gctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, 'rgba(' + rgb + ',0.75)'); g.addColorStop(1, 'rgba(' + rgb + ',0.45)');
+      gctx.fillStyle = g; gctx.beginPath(); gctx.arc(cx, cy, r, 0, 7); gctx.fill();
+      gctx.strokeStyle = 'rgba(' + rgb + ',1)'; gctx.lineWidth = 1; gctx.stroke();
+    }
+    if (S.show2) disc(R.c2, '255,181,71');
+    disc(R.c, '79,216,255');
+    gctx.setLineDash([3, 3]); gctx.strokeStyle = 'rgba(255,255,255,0.9)'; gctx.lineWidth = 1.2;
+    gctx.beginPath(); gctx.arc(cx, cy, unit / 2, 0, 7); gctx.stroke(); gctx.setLineDash([]);
+    gctx.fillStyle = 'rgba(8,11,22,0.8)'; gctx.fillRect(18, 70, 68, 14);
+    gctx.fillStyle = 'rgba(255,255,255,0.85)'; gctx.font = '600 10px system-ui,sans-serif'; gctx.textAlign = 'center';
+    var ratio = R.c / R.c0;
+    gctx.fillText(ratio.toFixed(ratio < 10 ? 1 : 0) + '× limit', cx, 81);
+  }
+
+  function updateReadouts() {
+    var R = calc(), st = status(R.c, R.c0);
+    var qs = $('q-status'); qs.textContent = st.t; qs.className = 'pill ' + st.cls;
+    $('q-u').textContent = fmtLen(R.u); $('q-v').textContent = fmtLen(R.v); $('q-s').textContent = fmtLen(R.vs);
+    $('q-c').textContent = fmtBlur(R.c); $('q-dof').textContent = dofText(R);
+    setCell('u', fmtLen(R.u)); setCell('v', fmtLen(R.v)); setCell('vs', fmtLen(R.vs));
+    setCell('f', Math.round(R.f) + ' mm'); setCell('N', fmtN(R.N) + ' (⌀ ' + R.D.toFixed(1) + ')');
+    setCell('c', fmtBlur(R.c), st.cls); setCell('st', st.t, st.cls);
+    setCell('sf', fmtLen(R.sFocus));
+    setCell('near', isFinite(R.near) ? fmtLen(R.near) : '—'); setCell('far', isFinite(R.near) ? fmtLen(R.far) : '—');
+    setCell('tot', !isFinite(R.near) ? 'nothing sharp' : isFinite(R.far) ? fmtLen(R.far - R.near) : '∞');
+    setCell('hyp', fmtLen(R.H)); setCell('m', R.m >= 0.1 ? '1 : ' + (1 / R.m).toFixed(1) : '1 : ' + (1 / R.m).toFixed(0));
+    cellEls.c2.style.display = S.show2 ? '' : 'none';
+    if (S.show2) { var st2 = status(R.c2, R.c0); setCell('c2', fmtBlur(R.c2) + ' · ' + st2.short, st2.cls); }
+    $('eq-num').textContent = '1/' + fmtNum(R.f) + ' = 1/' + fmtNum(R.u) + ' + 1/' + fmtNum(R.v) + '   (mm)';
+    $('eq-dec').textContent = (1 / R.f).toFixed(5) + ' = ' + (1 / R.u).toFixed(5) + ' + ' + (1 / R.v).toFixed(5);
+    var diff = R.vs - R.v, note;
+    if (R.c <= R.c0) note = 'The sensor sits ' + (Math.abs(diff) < 0.05 ? 'exactly at v' : 'within the sharp zone around v') + ', so each point lands as a disc smaller than the ' + fmtBlur(R.c0) + ' limit: in focus.';
+    else if (diff > 0) note = 'The sensor is ' + fmtLen(diff) + ' behind the image point, so the rays have already crossed and spread into a ' + fmtBlur(R.c) + ' disc.';
+    else note = 'The sensor is ' + fmtLen(-diff) + ' in front of the image point, so the cone is cut off before it converges: a ' + fmtBlur(R.c) + ' disc.';
+    $('eq-note').textContent = note;
+    drawGauge(R);
+    updatePreview(R, st);
+  }
+
+  /* ---------- camera preview ---------- */
+  var frameEl = $('frame'), pvBg = $('pv-bg'), pvA = $('pv-a'), pvB = $('pv-b'), fw = 180, fh = 120;
+  function fitPreview() {
+    var box = $('preview').getBoundingClientRect();
+    var aw = box.width - 12, ah = isDesk.matches ? box.height - 12 : aw / 1.5;
+    var w = Math.max(60, Math.min(aw, ah * 1.5)); fw = w; fh = w / 1.5;
+    frameEl.style.width = fw + 'px'; frameEl.style.height = fh + 'px';
+  }
+  function rng(seed) { return function () { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; }; }
+  function paintBg() {
+    pvBg.width = 1200; pvBg.height = 800;
+    var g = pvBg.getContext('2d'), r = rng(11);
+    var sky = g.createLinearGradient(0, 0, 0, 800);
+    sky.addColorStop(0, '#0a1433'); sky.addColorStop(0.5, '#2a2458'); sky.addColorStop(0.62, '#4a2f5e'); sky.addColorStop(0.63, '#15142a'); sky.addColorStop(1, '#07070f');
+    g.fillStyle = sky; g.fillRect(0, 0, 1200, 800);
+    for (var s = 0; s < 90; s++) { g.fillStyle = 'rgba(255,255,255,' + (0.3 + r() * 0.6) + ')'; g.fillRect(r() * 1200, r() * 330, 1.6, 1.6); }
+    var x = -10;
+    while (x < 1210) {
+      var bw = 45 + r() * 90, bh = 90 + r() * 250;
+      g.fillStyle = r() < 0.5 ? '#0c0d1f' : '#11122a'; g.fillRect(x, 505 - bh, bw, bh + 300);
+      for (var wy = 505 - bh + 12; wy < 495; wy += 16) for (var wx = x + 8; wx < x + bw - 8; wx += 13)
+        if (r() < 0.33) { g.fillStyle = r() < 0.7 ? 'rgba(255,205,120,0.85)' : 'rgba(150,210,255,0.8)'; g.fillRect(wx, wy, 6, 8); }
+      x += bw + 3;
+    }
+    var pal = ['255,190,90', '255,120,90', '120,200,255', '255,240,200', '200,140,255'];
+    for (var i = 0; i < 60; i++) {
+      var bx = r() * 1200, by = 520 + r() * 250, br = 5 + r() * 14, c = pal[(r() * pal.length) | 0];
+      var gr = g.createRadialGradient(bx, by, 0, bx, by, br);
+      gr.addColorStop(0, 'rgba(' + c + ',1)'); gr.addColorStop(0.5, 'rgba(' + c + ',0.7)'); gr.addColorStop(1, 'rgba(' + c + ',0)');
+      g.fillStyle = gr; g.beginPath(); g.arc(bx, by, br, 0, 7); g.fill();
+    }
+  }
+  function paintCard() {
+    pvA.width = 480; pvA.height = 640;
+    var g = pvA.getContext('2d');
+    g.fillStyle = '#f5f1e8'; g.beginPath(); g.moveTo(24, 0); g.arcTo(480, 0, 480, 640, 24); g.arcTo(480, 640, 0, 640, 24); g.arcTo(0, 640, 0, 0, 24); g.arcTo(0, 0, 480, 0, 24); g.fill();
+    g.strokeStyle = '#1a1d2b'; g.lineWidth = 8; g.strokeRect(22, 22, 436, 596);
+    g.fillStyle = '#0b7fa8'; g.beginPath(); g.moveTo(240, 50); g.lineTo(330, 170); g.lineTo(275, 170); g.lineTo(275, 330); g.lineTo(205, 330); g.lineTo(205, 170); g.lineTo(150, 170); g.closePath(); g.fill();
+    g.fillStyle = '#1a1d2b'; g.font = '800 64px Georgia,serif'; g.textAlign = 'center'; g.fillText('Aa', 385, 300);
+    g.font = '700 22px system-ui,sans-serif'; g.fillText('FOCUS TEST', 240, 380);
+    g.font = '14px system-ui,sans-serif'; g.fillText('The quick brown fox jumps over', 240, 406);
+    var cx = 130, cy = 510, R0 = 80;
+    for (var i = 0; i < 36; i += 2) { g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R0, i * Math.PI / 18, (i + 1) * Math.PI / 18); g.closePath(); g.fill(); }
+    for (var j = 0; j < 12; j++) g.fillRect(250 + j * 16, 440, 7, 70);
+    for (var k2 = 0; k2 < 24; k2++) g.fillRect(250 + k2 * 8, 525, 3.5, 60);
+  }
+  function paintCandle() {
+    pvB.width = 240; pvB.height = 560;
+    var g = pvB.getContext('2d');
+    var glow = g.createRadialGradient(120, 110, 5, 120, 110, 120);
+    glow.addColorStop(0, 'rgba(255,200,100,0.55)'); glow.addColorStop(1, 'rgba(255,160,60,0)');
+    g.fillStyle = glow; g.fillRect(0, 0, 240, 260);
+    var body = g.createLinearGradient(65, 0, 175, 0);
+    body.addColorStop(0, '#d9c29a'); body.addColorStop(0.4, '#fff4dc'); body.addColorStop(1, '#c9ad80');
+    g.fillStyle = body; g.fillRect(65, 170, 110, 360);
+    g.beginPath(); g.ellipse(120, 170, 55, 12, 0, 0, 7); g.fillStyle = '#fff8e8'; g.fill();
+    g.fillStyle = '#6d5a3a'; g.fillRect(40, 528, 160, 16); g.fillRect(55, 520, 130, 10);
+    g.strokeStyle = '#2a1e10'; g.lineWidth = 4; g.beginPath(); g.moveTo(120, 172); g.lineTo(120, 140); g.stroke();
+    var fl = g.createRadialGradient(120, 115, 2, 120, 110, 60);
+    fl.addColorStop(0, '#ffffff'); fl.addColorStop(0.3, '#fff2b0'); fl.addColorStop(0.7, '#ffae3b'); fl.addColorStop(1, 'rgba(255,110,30,0)');
+    g.fillStyle = fl; g.beginPath(); g.moveTo(120, 30); g.quadraticCurveTo(165, 110, 120, 150); g.quadraticCurveTo(75, 110, 120, 30); g.fill();
+  }
+  // Blur in the preview is proportional to the circle of confusion. Scale: a 0.03 mm disc spans 1/260 of
+  // the frame height (about 3x a literal full-frame mapping), so the acceptable limit is just visible.
+  function blurCss(c) { var d = c / REF_COC * (fh / 260); return Math.min(d / 3, 40); }
+  function sizeFrac(m, base) { return Math.max(0.1, base * m / (m + 0.06)); }
+  function updatePreview(R, st) {
+    pvBg.style.filter = 'blur(' + blurCss(R.cInf).toFixed(2) + 'px)';
+    var fa = sizeFrac(R.vs / R.u, 0.92), ha = fa * fh, wa = ha * 0.75, cxa = S.show2 ? 0.38 * fw : 0.5 * fw;
+    pvA.style.width = wa + 'px'; pvA.style.height = ha + 'px'; pvA.style.left = (cxa - wa / 2) + 'px'; pvA.style.top = (fh * 0.52 - ha / 2) + 'px';
+    pvA.style.filter = 'blur(' + blurCss(R.c).toFixed(2) + 'px)';
+    pvB.style.display = S.show2 ? 'block' : 'none';
+    if (S.show2) {
+      var fb = sizeFrac(R.vs / S.u2, 0.85), hb = fb * fh, wb = hb * 240 / 560, cxb = 0.72 * fw;
+      pvB.style.width = wb + 'px'; pvB.style.height = hb + 'px'; pvB.style.left = (cxb - wb / 2) + 'px'; pvB.style.top = (fh * 0.55 - hb / 2) + 'px';
+      pvB.style.filter = 'blur(' + blurCss(R.c2).toFixed(2) + 'px)';
+      pvA.style.zIndex = S.u < S.u2 ? 3 : 2; pvB.style.zIndex = S.u < S.u2 ? 2 : 3;
+    }
+    var ps = $('pv-state'); ps.textContent = st.short; ps.className = 'pv-state ' + st.cls;
+  }
+
+  /* ---------- boot ---------- */
+  paintBg(); paintCard(); paintCandle();
+  setStep(0); syncUI();
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () { resize(); sizeGauge(); });
+    ro.observe(cv); ro.observe($('preview'));
+  }
+  window.addEventListener('resize', function () { resize(); sizeGauge(); });
+  resize(); sizeGauge();
+
+  // small API for testing / tinkering from the console
+  window.FocusLab = {
+    state: S, calc: calc, autofocus: autofocus,
+    step: function (i) { setStep(i); STEPS[i].show(); },
+    set: function (o) { stopTween(); for (var key in o) S[key] = o[key]; syncUI(); kick(); return calc(); },
+    imgDist: imgDist, isAnimating: function () { return !!tw; }
+  };
+})();
+</script>
+</body>
+</html>

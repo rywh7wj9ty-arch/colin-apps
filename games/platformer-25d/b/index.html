@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Elderglow">
+<meta name="theme-color" content="#2c2a5e"><title>Elderglow</title>
+<link rel="manifest" href="manifest.webmanifest?v=20261016a"><link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="../shared/ui.css?v=20261016a">
+<style>:root{--bg:#2c2a5e;--accent:#9ff3ff;--btn:linear-gradient(180deg,#6a8cff,#a46bff);--btnsolid:#7a7cff;--titlegrad:linear-gradient(90deg,#4f7dff,#b06bff)}</style>
+<script src="../shared/boot.js?v=20261016a"></script></head><body>
+<div id="stage"></div>
+<div class="hud"><div class="chip"><span class="ic"></span><span id="count">0 / 0</span></div><button id="btnPause" aria-label="Pause">II</button></div>
+<div id="toast"></div><div id="story"></div>
+<div class="ctl" id="pad"><span class="l">◀</span><span class="r">▶</span></div>
+<div class="ctl rbtns"><button class="rb" id="btnAct"><b>✦</b>Flare</button><button class="rb" id="btnJump"><b>▲</b>Jump</button></div>
+<div class="panel show" id="title"><div class="card"><h1>Elderglow</h1><p><b>Concept B · Ori-style light hybrid</b></p><p>You are Ember, the last light of a sleeping forest. Flare your light to push back the dark, wake the lanterns, and carry the wisps home to the Elder Tree.</p>
+<button class="btn" id="btnStart">Play</button>
+<div class="small">Touch: slide on the left pad to run, tap Jump (hold for higher), Flare for light.<br>Keys: ←/→ or A/D, Space to jump, X or Shift for Flare, P to pause.<br>Renderer: <span id="backend">…</span></div></div></div>
+<div class="panel" id="pause"><div class="card"><h2>Paused</h2>
+<div class="row"><label>Music</label><input type="range" id="s-music" min="0" max="1" step="0.05"><output id="v-music"></output></div>
+<div class="row"><label>Sound FX</label><input type="range" id="s-sfx" min="0" max="1" step="0.05"><output id="v-sfx"></output></div>
+<div class="row"><label>Brightness</label><input type="range" id="s-bright" min="0.6" max="1.6" step="0.05"><output id="v-bright"></output></div>
+<div class="stats" id="statsInPause"></div>
+<button class="btn" id="btnResume">Resume</button><button class="btn alt" id="btnStats">All stats</button><button class="btn alt" id="btnRestart">Restart level</button>
+<a class="btn alt" href="../" style="text-decoration:none">Back to both concepts</a></div></div>
+<div class="panel" id="statsPanel"><div class="card"><h2>Stats</h2><div class="stats" id="statsBig"></div><button class="btn" id="btnStatsClose">Close</button></div></div>
+<div class="panel" id="end"><div class="card"><h1>Elderglow</h1><h2 id="endTitle">Level complete!</h2><div class="stats" id="endStats"></div><button class="btn" id="btnAgain">Play again</button><a class="btn alt" href="../" style="text-decoration:none">Back to both concepts</a></div></div>
+<div id="loader">Loading Elderglow…</div>
+<div id="err"><div class="card"><h2>Something went wrong</h2><p id="errMsg"></p><button class="btn" onclick="location.reload()">Tap to reload</button></div></div>
+<script type="module" src="main.js?v=20261016a"></script></body></html>

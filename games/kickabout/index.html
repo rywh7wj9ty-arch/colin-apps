@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Kickabout">
+<meta name="theme-color" content="#2fa8ff"><title>Kickabout</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/favicon-32.png">
+<link rel="stylesheet" href="style.css"></head><body>
+<div id="wrap"><canvas id="c"></canvas>
+<div id="hud" class="hidden"><div id="board"><span class="tm t0"><i></i><b id="n0">BLUE</b></span><span id="score">0 - 0</span><span class="tm t1"><b id="n1">CPU</b><i></i></span><span id="clock">3:00</span></div>
+<button id="pauseBtn" aria-label="Pause">II</button></div>
+<div id="banner" class="hidden"></div>
+<div id="menu" class="ov"><div class="panel"><h1>KICK<span>ABOUT</span></h1><p class="sub">Fast top-down football</p>
+<button class="big" id="b1p">1 Player vs CPU</button><button class="big" id="b2p">2 Players (same device)</button>
+<div class="row"><span>Match length</span><button id="bLen">3 min</button></div>
+<div class="row"><span>CPU skill</span><button id="bDiff">Normal</button></div>
+<div class="row2"><button id="bSet">Settings</button><button id="bStats">Stats</button><button id="bHelp">Controls</button></div></div></div>
+<div id="pause" class="ov hidden"><div class="panel"><h2 id="pTitle">Paused</h2><div id="sliders">
+<label>Music <input type="range" id="sMusic" min="0" max="100"><output></output></label>
+<label>Sound effects <input type="range" id="sSfx" min="0" max="100"><output></output></label>
+<label>Brightness <input type="range" id="sBright" min="60" max="140"><output></output></label></div>
+<button class="big" id="bResume">Resume</button><button id="bQuit">Quit to menu</button></div></div>
+<div id="stats" class="ov hidden"><div class="panel"><h2>Stats</h2><div id="statList"></div><button class="big" id="bStatsBack">Back</button><button id="bReset">Reset stats</button></div></div>
+<div id="help" class="ov hidden"><div class="panel"><h2>Controls</h2><div class="help">
+<p><b>Touch:</b> drag anywhere on the left side to run. Tap the KICK button to pass. Hold it to charge a shot, longer hold = harder and higher. Swipe sideways as you let go, or steer straight after kicking, to bend the ball. Tap KICK without the ball to slide tackle (close) or switch player (far).</p>
+<p><b>2 players:</b> each player gets half the screen (bottom/top in portrait, left/right in landscape). Run with the outer side of your half, kick with the inner side.</p>
+<p><b>Keyboard:</b> P1 WASD + Space kick, Left Shift switch. P2 arrows + Enter kick, Right Shift switch. Esc pauses.</p></div><button class="big" id="bHelpBack">Got it</button></div></div>
+<div id="end" class="ov hidden"><div class="panel"><h2 id="endT">Full time</h2><p id="endS" class="endscore"></p><p id="endM"></p><button class="big" id="bAgain">Play again</button><button id="bMenu">Menu</button></div></div>
+</div><script src="game.js"></script></body></html>

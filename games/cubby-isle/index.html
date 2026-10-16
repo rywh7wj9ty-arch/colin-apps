@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Cubby Isle</title>
+<meta name="theme-color" content="#8fd3f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cubby Isle">
+<link rel="manifest" href="manifest.webmanifest?v=__V__">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="stylesheet" href="style.css?v=__V__">
+<script>
+window.__V = '__V__';
+window.__bootFail = function (msg) {
+  if (window.__booted) return;
+  var e = document.getElementById('err'); if (!e) return;
+  document.getElementById('loading').style.display = 'none';
+  e.style.display = 'flex'; document.getElementById('errmsg').textContent = String(msg).slice(0, 300);
+};
+window.addEventListener('error', function (ev) { window.__bootFail(ev.message || 'Script error'); });
+window.addEventListener('unhandledrejection', function (ev) { window.__bootFail((ev.reason && ev.reason.message) || ev.reason); });
+setTimeout(function () { if (!window.__booted) window.__bootFail('Loading took too long.'); }, 20000);
+// hide the loader no matter what after a while (the game hides it as soon as the island is meshed)
+setTimeout(function () { var l = document.getElementById('loading'); if (l && window.__booted) l.style.display = 'none'; }, 9000);
+</script>
+<script src="core.js?v=__V__"></script>
+<script src="mesher.js?v=__V__"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="tilt"></div>
+<div id="loading"><div class="bun"><i></i><i></i></div><div class="lt">Building the island…</div></div>
+<div id="err" onclick="location.reload()"><b>Oops! The island got stuck</b><span id="errmsg"></span><em>Tap to reload</em></div>
+
+<div id="title" class="screen">
+  <h1 class="logo"><span>Cubby</span><span class="isle">Isle</span></h1>
+  <div class="tag">bonk · build · befriend</div>
+  <div id="slots"></div>
+  <div class="tfoot">Tip: add to your Home Screen to play offline</div>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="quest"><div class="qt" id="qTitle"></div><div class="qx" id="qText"></div><div class="qbar"><i id="qBar"></i></div></div>
+  <div id="seeds"><span class="star">★</span><span id="seedN">0</span></div>
+  <button id="bMenu" class="rb" aria-label="Menu">☰</button>
+  <div id="hotbar"></div>
+  <div id="stick"><i></i></div>
+  <button id="bJump" class="rb big" aria-label="Jump">⤒</button>
+  <button id="bMode" class="rb mode" aria-label="Mine or build"><span id="modeIco">⛏</span><small id="modeTxt">Mine</small></button>
+  <button id="bCraft" class="rb" aria-label="Craft">✿<small>Craft</small></button>
+  <div id="toast"></div>
+  <div id="banner"></div>
+  <div id="bubble" class="hidden"><b id="bubName">Moss</b><p id="bubText"></p><button class="pill" id="bubOk">OK!</button></div>
+  <div id="bpTag" class="hidden"></div>
+</div>
+
+<div id="craft" class="screen modal hidden"><div class="wheel" id="wheel"></div><button class="pill close" id="craftClose">Close</button></div>
+
+<div id="pause" class="screen modal hidden">
+  <div class="card">
+    <h2>Paused</h2>
+    <div class="row"><label>Music</label><button class="tog" id="tMusic"></button><input type="range" min="0" max="1" step="0.01" id="sMusic"></div>
+    <div class="row"><label>Sound effects</label><button class="tog" id="tSfx"></button><input type="range" min="0" max="1" step="0.01" id="sSfx"></div>
+    <div class="row"><label>Reduced effects</label><button class="tog" id="tLow"></button></div>
+    <div class="row bp"><label>Blueprints</label><button class="pill small" id="bpCottage">Cottage</button><button class="pill small" id="bpLight">Lighthouse</button><button class="pill small grey" id="bpOff">Off</button></div>
+    <div class="row"><label>Quest log</label><span id="qLog"></span></div>
+    <div class="btns"><button class="pill" id="bResume">Keep playing</button><button class="pill grey" id="bTitle">Save &amp; quit</button></div>
+  </div>
+</div>
+<script type="module" src="game.js?v=__V__"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:' && !/[?&]nosw/.test(location.search)) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>

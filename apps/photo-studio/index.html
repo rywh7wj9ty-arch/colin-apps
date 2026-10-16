@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en-GB"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1a1a1a">
+<title>Photo Studio</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Photo Studio">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+</head><body>
+<header id="top">
+  <div class="brand">Photo<b>Studio</b></div>
+  <nav class="modules"><button data-mod="library" class="on">Library</button><button data-mod="develop">Develop</button></nav>
+  <div class="actions">
+    <label class="btn" title="Import (Ctrl+I)">Import<input id="fileIn" type="file" multiple accept="image/*,.dng,.cr2,.cr3,.nef,.nrw,.arw,.srf,.sr2,.raf,.orf,.rw2,.pef,.srw,.3fr,.iiq,.erf,.kdc,.mrw,.x3f" hidden></label>
+    <button class="btn primary" id="exportBtn" title="Export (Ctrl+E)">Export</button>
+    <button class="btn icon" id="helpBtn" title="Shortcuts (?)">?</button>
+  </div>
+</header>
+
+<section id="library" class="module on">
+  <div class="filterbar">
+    <span>Filter:</span>
+    <select id="fRating"><option value="0">Any rating</option><option value="1">★ 1+</option><option value="2">★ 2+</option><option value="3">★ 3+</option><option value="4">★ 4+</option><option value="5">★ 5</option></select>
+    <select id="fFlag"><option value="all">All flags</option><option value="pick">Picked</option><option value="none">Unflagged</option><option value="reject">Rejected</option><option value="norej">Not rejected</option></select>
+    <select id="fSort"><option value="added">Added</option><option value="name">Name</option><option value="rating">Rating</option></select>
+    <input id="fSearch" placeholder="Search name" type="search">
+    <span class="sp"></span>
+    <button class="btn" id="selAll">Select all</button>
+    <button class="btn" id="delSel">Remove</button>
+    <span id="libCount"></span>
+  </div>
+  <div id="grid"></div>
+  <div id="empty" class="empty"><div><h2>Drop photos here</h2><p>or tap <b>Import</b>. JPEG, PNG, WebP, HEIC (any browser) and RAW files (using their embedded full-size preview).</p><button class="btn primary" id="demoBtn">Load sample photo</button></div></div>
+</section>
+
+<section id="develop" class="module">
+  <div id="viewer">
+    <div id="stage"><canvas id="gl"></canvas><canvas id="ov"></canvas><div id="zoomInfo"></div><div id="rawBadge" hidden></div><div id="cropBox" hidden><div class="grid3"></div><i data-h="nw"></i><i data-h="n"></i><i data-h="ne"></i><i data-h="e"></i><i data-h="se"></i><i data-h="s"></i><i data-h="sw"></i><i data-h="w"></i></div><div id="baLabel" hidden>Before</div></div>
+    <div class="vtools">
+      <button class="btn" id="prevBtn" title="Previous (←)">‹</button>
+      <button class="btn" id="baBtn" title="Original: tap to toggle, hold to peek (\)">◐ Original</button>
+      <button class="btn" id="cropBtn" title="Crop (R)">Crop</button><button class="btn" id="healBtn" title="Spot removal (Q)">Heal</button><button class="btn" id="maskBtn" title="Masks (M)">Mask</button><button class="btn" id="zoomBtn" title="Zoom (Z)">Fit</button>
+      <span class="stars" id="devStars"></span>
+      <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)">↶</button><button class="btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)">↷</button>
+      <button class="btn" id="nextBtn" title="Next (→)">›</button>
+    </div>
+    <div id="filmstrip"></div>
+  </div>
+  <aside id="panel">
+    <div class="histo"><canvas id="histo" width="512" height="160"></canvas><div id="info"></div></div>
+    <div class="quick"><button class="btn" id="autoBtn">Auto</button><button class="btn" id="copyBtn" title="Ctrl+Shift+C">Copy</button><button class="btn" id="pasteBtn" title="Ctrl+Shift+V">Paste</button><button class="btn" id="resetBtn">Reset</button></div>
+    <div id="sections"></div>
+  </aside>
+</section>
+
+<div id="modal" hidden><div class="dlg" id="dlg"></div></div>
+<div id="toast"></div>
+<div id="busy" hidden><div class="spin"></div><div id="busyMsg">Working…</div></div>
+<script src="engine.js"></script>
+<script src="tools.js"></script>
+<script src="app.js"></script>
+<script src="rawctl.js"></script>
+<script src="interact.js"></script>
+<script src="features.js"></script>
+<script src="pro.js"></script>
+<script src="ai.js"></script>
+<script src="ai2.js"></script>
+<script src="lib.js"></script>
+<script src="dxo.js"></script>
+<script src="dxo2.js"></script>
+<script src="dxo3.js"></script>
+<script src="dn.js"></script>
+<script src="lr.js"></script>
+<script src="lr2.js"></script>
+<script src="lr3.js"></script>
+<script src="lr4.js"></script>
+<script src="lr5.js"></script>
+<script src="lr6.js"></script>
+<script src="lr7.js"></script>
+<script src="autotag.js"></script>
+<script src="libui.js"></script>
+<script src="slreset.js"></script>
+<script src="lr8.js"></script>
+<script src="lr9.js"></script>
+<script src="lr10.js"></script>
+<script src="lr11.js"></script>
+<script src="lr12.js"></script>
+<script src="lr13.js"></script>
+<script src="lr14.js"></script>
+<script src="heic.js"></script>
+<script src="pwa.js"></script>
+<script src="cvtools.js"></script>
+<script src="ai3.js"></script>
+<script src="nr2.js"></script>
+<script src="ba.js"></script>
+<script src="lrlayout.js"></script>
+<script type="module" src="raw.js"></script>
+</body></html>

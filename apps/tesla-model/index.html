@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Colin's Tesla + SpaceX 20-year model</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--red:#e31937;--navy:#1f3864;--bg:#0f1115;--card:#1a1d24;--muted:#9aa3b2;--ok:#2fbf71;--warn:#f0b429;--bad:#ef4444;--line:#2a2f3a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:#e8ebf0;-webkit-text-size-adjust:100%}
+header{padding:18px 16px 8px;background:linear-gradient(135deg,#1a1d24,#2a0e14)}h1{font-size:22px;margin:0 0 4px}h1 span{color:var(--red)}
+.sub{color:var(--muted);font-size:13px}.warn{margin:10px 16px;padding:10px 12px;border:1px solid #7a2a33;background:#2a1418;border-radius:10px;font-size:13px;line-height:1.4}
+main{padding:0 12px 40px;max-width:1100px;margin:auto}.seg{display:flex;gap:6px;margin:12px 4px;flex-wrap:wrap}.seg button{flex:1;min-width:100px;padding:11px 8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:#e8ebf0;font-weight:600;font-size:14px}
+.seg button.on{background:var(--red);border-color:var(--red)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 4px}@media(min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--card);border-radius:12px;padding:10px 12px;border:1px solid var(--line)}.kpi .l{font-size:12px;color:var(--muted)}.kpi .v{font-size:20px;font-weight:700;margin-top:2px}.kpi .s{font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 4px}.card h2{font-size:16px;margin:2px 0 10px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}.grid2>*{min-width:0}@media(min-width:900px){.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.ctl{margin:10px 0}.ctl label{display:flex;justify-content:space-between;font-size:13px;color:#cfd5df}.ctl label b{color:#fff}.ctl input[type=range]{width:100%;accent-color:var(--red);height:28px}
+.ctl small{color:var(--muted);font-size:11px;display:block}select,input[type=number]{width:100%;padding:9px;border-radius:8px;background:#11141a;color:#fff;border:1px solid var(--line);font-size:15px}
+.row{display:flex;gap:8px;align-items:center}.tog{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:14px}
+.sw{position:relative;width:50px;height:28px}.sw input{opacity:0;width:0;height:0}.sl{position:absolute;inset:0;background:#3a404c;border-radius:28px;transition:.2s}.sl:before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.sw input:checked+.sl{background:var(--red)}.sw input:checked+.sl:before{transform:translateX(22px)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}th,td{padding:6px 5px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card)}
+.tw{max-height:420px;overflow:auto}.yes{color:var(--ok);font-weight:700}.late{color:var(--warn);font-weight:700}.no{color:var(--bad);font-weight:700}
+.chart{position:relative;height:280px}details summary{cursor:pointer;font-weight:600;padding:6px 0}a{color:#7fb2ff}.btn{display:inline-block;padding:11px 14px;background:var(--navy);color:#fff;border-radius:10px;text-decoration:none;font-weight:600;margin:4px 4px 0 0}
+.src li{margin:4px 0;font-size:12px;color:#c9cfd9}.hl{background:#3a2f0b}
+</style></head><body>
+<header><h1>Colin's <span>Tesla</span> + SpaceX model</h1><div class="sub">20-year projection 2026–2046 · prices as of 8 Oct 2026 · values in $ and £</div></header>
+<div class="warn"><b>Not advice.</b> The default scenario assumes Tesla hits <i>every</i> stated target (Musk's 2025 CEO award milestones, Master Plan ambitions, robotaxi &amp; Optimus at massive scale) <i>and</i> merges with SpaceX. That is extremely optimistic – Tesla has missed or dropped many past targets and no merger has been agreed. Use it as a what-if tool only.</div>
+<main>
+<div class="seg" id="scen"></div>
+<div class="kpis" id="kpis"></div>
+<div class="grid2">
+ <div class="card"><h2>Value per original TSLA share ($)</h2><div class="chart"><canvas id="c1"></canvas></div><div class="sub">Lines: all three scenarios with your current merger settings. Bold = selected.</div></div>
+ <div class="card"><h2>My position (£)</h2><div class="chart"><canvas id="c2"></canvas></div><div class="sub" id="c2s"></div></div>
+</div>
+<div class="card"><h2>Key assumptions <span class="sub">(sliders reset when you change scenario)</span></h2>
+ <div class="grid2"><div>
+  <div class="tog">SpaceX merger happens<label class="sw"><input type="checkbox" id="merge" checked><span class="sl"></span></label></div>
+  <div class="ctl"><label>Merger completion year <b id="merge_year_v"></b></label><input type="range" id="merge_year" min="2027" max="2040" step="1"></div>
+  <div class="ctl"><label>Exchange-ratio method</label><select id="ratio_method"><option>Today's market prices</option><option>Projected prices in merger year</option><option>Manual</option></select></div>
+  <div class="ctl" id="manwrap"><label>Manual ratio (SPCX per TSLA) <b id="manual_ratio_v"></b></label><input type="range" id="manual_ratio" min="1" max="5" step="0.01"><small>FinanceFeeds: ~3.34 gives Tesla holders 50%</small></div>
+  <div class="ctl"><label>Premium to Tesla holders <b id="prem_v"></b></label><input type="range" id="prem" min="0" max="0.6" step="0.01"></div>
+  <div class="ctl"><label>Merger synergy (on combined value) <b id="syn_v"></b></label><input type="range" id="syn" min="-0.1" max="0.3" step="0.01"></div>
+  <div class="tog">Include Caroline's shares<label class="sw"><input type="checkbox" id="incl_car"><span class="sl"></span></label></div>
+  <div class="row"><div class="ctl" style="flex:1"><label>TSLA price $</label><input type="number" id="price" step="0.01" inputmode="decimal"></div><div class="ctl" style="flex:1"><label>SPCX price $</label><input type="number" id="spx_price" step="0.01" inputmode="decimal"></div><div class="ctl" style="flex:1"><label>GBP/USD</label><input type="number" id="fx" step="0.0001" inputmode="decimal"></div></div>
+ </div><div id="sliders"></div></div>
+</div>
+<div class="grid2">
+ <div class="card"><h2>CEO award milestone checker <span class="sub">(Tesla standalone)</span></h2><table id="ms"></table><div class="sub" id="mss"></div></div>
+ <div class="card"><h2>Merger maths</h2><table id="mm"></table></div>
+</div>
+<div class="grid2">
+ <div class="card"><h2>Tesla revenue mix ($bn)</h2><div class="chart"><canvas id="c3"></canvas></div></div>
+ <div class="card"><h2>Tesla vs SpaceX equity value ($tn)</h2><div class="chart"><canvas id="c4"></canvas></div></div>
+</div>
+<div class="card"><h2>Year by year</h2><div class="tw"><table id="yt"></table></div></div>
+<div class="card"><h2>My holdings today</h2><table id="ht"></table><div class="sub">£ cost shown at today's FX (your real £ cost depends on FX on each purchase date). Share counts from your 'Colin' and 'Colin &amp; CAroline' sheets – some sheets disagree; see the spreadsheet's Holdings notes.</div></div>
+<div class="card"><a class="btn" href="Tesla_Stocks_Improved.xlsx" download>⬇ Download the spreadsheet (.xlsx)</a>
+<details><summary>How the model works</summary><div class="sub" style="line-height:1.5">Each business line follows an S-curve from its 2026 level to a long-run cap (midpoint year + steepness). Revenue = volume × price (cars, FSD subscriptions, robotaxi miles × fare, Optimus units, storage GWh × $/kWh, services). EBITDA = segment margins (ramping to mature over 6 years) minus unallocated R&amp;D. Equity value in year Y = next year's EBITDA × an EV/EBITDA multiple that shrinks from the 2027 level to a mature level by 2038, plus net cash; the price converges from today's market price over 3 years. SpaceX is modelled the same way from revenue. After the merger, each TSLA share becomes <i>ratio</i> SPCX shares of the combined company (combined value × (1+synergy) ÷ combined shares). Same maths as the spreadsheet.</div></details>
+<details><summary>Sources</summary><ol class="src" id="src"></ol></details></div>
+</main>
+<script>
+const D={"glob": {"price": 375.0, "price_date": "8 Oct 2026", "shares": 3.949547394, "spx_price": 160.57, "spx_shares": 13.57, "fx": 1.3229, "incl_car": "No", "infl": 0.025, "merge": "Yes", "merge_year": 2027, "ratio_method": "Today's market prices", "prem": 0.0, "manual_ratio": 3.34, "conv": 3, "mult_end": 2038, "ramp": 6, "netcash": 37.7, "veh0": 1.81, "cumveh0": 8.9, "asp0": 41.5, "auto_m0": 0.12, "fsd0": 1.6, "rt0": 0.002, "fare0": 1.5, "fare_decl": 0.05, "rt_m0": 0.2, "opt0": 0.005, "opt_asp0": 50, "opt_decl": 0.08, "opt_m0": -1.0, "en0": 52, "en_p0": 245, "en_decl": 0.04, "en_m0": 0.2, "svc0": 17.5, "svc_fade": 0.93, "unalloc": 0.02, "da": 0.07, "sbc": 0.03, "tax": 0.21, "sx_rev0": 32, "sx_m0": 0.35, "ms_cap": 8500, "ms_veh": 20, "ms_fsd": 10, "ms_rt": 1, "ms_bot": 1, "ms_ebitda": 400, "ms_year": 2035}, "sp": {"veh_cap": [20, 6, 3], "veh_mid": [2035, 2035, 2035], "veh_k": [0.4, 0.3, 0.3], "asp_chg": [-0.02, -0.015, -0.01], "asp_floor": [30, 32, 34], "auto_m": [0.18, 0.14, 0.11], "fsd_cap": [50, 25, 10], "fsd_mid": [2034, 2036, 2037], "fsd_k": [0.45, 0.35, 0.3], "fsd_arpu": [100, 80, 60], "fsd_m": [0.8, 0.75, 0.7], "rt_cap": [16, 5, 1], "rt_mid": [2034, 2037, 2039], "rt_k": [0.5, 0.4, 0.35], "rt_miles": [60, 50, 40], "rt_fare_floor": [1.0, 1.0, 1.1], "rt_m": [0.6, 0.5, 0.4], "opt_cap": [12, 3, 0.5], "opt_mid": [2036, 2039, 2040], "opt_k": [0.5, 0.4, 0.35], "opt_asp_floor": [20, 25, 30], "opt_m": [0.4, 0.3, 0.2], "en_cap": [1500, 600, 200], "en_mid": [2035, 2035, 2035], "en_k": [0.35, 0.3, 0.25], "en_floor": [120, 130, 140], "en_m": [0.25, 0.22, 0.18], "svc_g": [0.15, 0.1, 0.06], "svc_m": [0.15, 0.13, 0.12], "m0": [40, 30, 22], "mt": [20, 15, 12], "dil": [0.005, 0.01, 0.015], "sx_cap": [2200, 1000, 400], "sx_mid": [2030, 2033, 2035], "sx_k": [0.6, 0.4, 0.35], "sx_m": [0.45, 0.4, 0.3], "sx_dil": [0.015, 0.02, 0.025], "syn": [0.1, 0.0, 0.0]}, "holdings": {"rows": [["Colin", "Money Box ISA", 276.44, 237.11], ["Colin", "Trading 212 non-ISA", 0, 336.41], ["Colin", "Trading 212 ISA", 92.04, 280.65], ["Caroline", "Money Box ISA", 109.6, 349.29], ["Caroline", "Trading 212 (?)", 6, 443]], "colin": {"shares": 368.48, "cost": 91377.7144}, "caroline": {"shares": 115.6, "cost": 40940.184}}, "sources": [["S1", "StockAnalysis.com (S&P Global data) \u2013 TSLA price history; TSLA close $375.00 on 8 Oct 2026", "8 Oct 2026", "https://stockanalysis.com/stocks/tsla/history/"], ["S2", "CNBC quote \u2013 SPCX close $160.57 on 8 Oct 2026, market cap $2.179tn, 13.57bn shares out", "8 Oct 2026", "https://www.cnbc.com/quotes/SPCX"], ["S3", "ExchangeRates.org.uk \u2013 GBP/USD close 1.3229 on 8 Oct 2026", "8 Oct 2026", "https://www.exchangerates.org.uk/GBP-USD-exchange-rate-history.html"], ["S4", "Tesla Form 10-Q Q2 2026 \u2013 3,949,547,394 shares outstanding at 16 Jul 2026 (includes 423.7m restricted CEO-award shares)", "23 Jul 2026", "https://www.sec.gov/Archives/edgar/data/1318605/000162828026049270/tsla-20260630.htm"], ["S5", "Tesla Q3 2026 Production, Deliveries & Deployments (8-K Ex. 99.1) \u2013 486,532 deliveries, 13.7 GWh storage", "2 Oct 2026", "https://www.sec.gov/Archives/edgar/data/1318605/000162828026064366/exhibit991111111.htm"], ["S6", "Tesla Q2 2026 Update deck \u2013 H1 2026 deliveries ~0.84m, storage 22.3 GWh, 1.48m paid FSD users, robotaxi metros", "22 Jul 2026", "https://fortune.com/company-assets/1900/quartr/slides-31912339a9c7d4acc7a371cc8cfa6e43-2026-07-22-20-08-25.pdf"], ["S7", "Tesla Q4 2025 Update deck \u2013 FY2025 revenue $94.8bn, adj. EBITDA $14.6bn; cumulative deliveries 8.9m at end-2025", "28 Jan 2026", "https://assets-ir.tesla.com/tesla-contents/IR/TSLA-Q4-2025-Update.pdf"], ["S8", "Tesla 2025 CEO Performance Award (SEC 8-K Ex. 10.2) \u2013 12 tranches; market cap $2tn\u2192$8.5tn; 20m vehicles, 10m FSD subs, 1m bots, 1m robotaxis, $50bn\u2192$400bn adj. EBITDA", "5 Sep 2025", "https://www.sec.gov/Archives/edgar/data/1318605/000110465925108507/tm2530590d1_ex10-2.htm"], ["S9", "Reuters \u2013 Tesla shareholders approve Musk pay plan (award approved 6 Nov 2025)", "6 Nov 2025", "https://www.reuters.com/legal/transactional/tesla-shareholders-approve-878-billion-pay-plan-elon-musk-2025-11-06/"], ["S10", "Tesla \u2013 Master Plan Part IV (\"Sustainable Abundance\": autonomy, Optimus, solar + storage)", "1 Sep 2025", "https://www.tesla.com/master-plan-part-4"], ["S11", "Tesla \u2013 Master Plan Part 3 (240 TWh storage, 30 TW renewables for a fully sustainable economy)", "5 Apr 2023", "https://www.tesla.com/master-plan-part-3"], ["S12", "Reuters \u2013 Tesla drops its goal of 20m vehicles a year by 2030 from impact report", "23 May 2024", "https://www.reuters.com/business/autos-transportation/tesla-drops-reference-its-goal-delivering-20-mln-vehicles-annually-impact-report-2024-05-23/"], ["S13", "All Things Elon \u2013 Tesla AI chief confirms 10m-a-year Optimus target (Fremont line ~1m/yr; Giga Texas ~10m/yr design capacity)", "1 Aug 2026", "https://www.allthings-elon.com/articles/tesla-optimus-10-million-annual-target-elluswamy-2026-08-01"], ["S14", "Eletric-vehicles.com \u2013 Tesla targets \"at least\" 2 million Cybercabs a year, Musk says", "2026", "https://eletric-vehicles.com/tesla/tesla-targets-at-least-2-million-cybercabs-produced-in-2026-musk-says/"], ["S15", "Tesla Q2 2026 earnings call transcript \u2013 Optimus 3 ~1m/yr, Optimus 4 ~10m/yr; energy GM \"mid to low 20%\"", "22 Jul 2026", "https://transcripts.platformaeronaut.com/transcripts/TSLA-2Q26-transcript"], ["S16", "Electrek \u2013 FSD becomes subscription-only ($99/month) after 14 Feb 2026", "14 Jan 2026", "https://electrek.co/2026/01/14/tesla-tsla-stop-selling-full-self-driving-package-subscription-only/"], ["S17", "SpaceX Q2 2026 results press release \u2013 H1 2026 revenue $12.51bn, Q2 adj. EBITDA $3.54bn", "4 Aug 2026", "https://static.poder360.com.br/uploads/2026/08/SpaceX-Reports-Second-Quarter-2026-Results.pdf"], ["S18", "SpaceX Q2 2026 earnings call (Motley Fool via Yahoo) \u2013 internal plan reaches ~$1tn revenue in 2030", "11 Aug 2026", "https://finance.yahoo.com/markets/stocks/articles/spacex-spcx-q2-2026-earnings-004252131.html"], ["S19", "CNBC \u2013 SpaceX/xAI merger valued at $1.25tn", "3 Feb 2026", "https://www.cnbc.com/2026/02/03/musk-xai-spacex-biggest-merger-ever.html"], ["S20", "Crypto Briefing \u2013 SPCX IPO 12 Jun 2026 at $135 (largest IPO ever)", "Jul 2026", "https://cryptobriefing.com/spacex-stock-slides-ipo-price/"], ["S21", "24/7 Wall St \u2013 no Tesla\u2013SpaceX deal announced; Polymarket 62.5% for announcement by 31 Dec 2027", "5 Oct 2026", "https://247wallst.com/investing/2026/10/05/tesla-is-down-16-this-year-and-bettors-now-favor-a-musk-merger-with-spacex/"], ["S22", "FinanceFeeds \u2013 merger math: 2.385 SPCX per TSLA at 18 Sep prices (Tesla holders ~41.7%); 50/50 needs ~3.34", "21 Sep 2026", "https://financefeeds.com/tesla-spacex-merger-39-percent-premium-2-trillion-trigger/"], ["S23", "Morningstar \u2013 Tesla holders should get 50\u201368% of any combined company; China divestiture report", "31 Jul 2026", "https://www.morningstar.com/stocks/tesla-reported-china-divestiture-plan-could-clear-path-spacex-merger"]]};
+const SC=["Tesla hits all targets","Base","Conservative"];
+const SL=[ ['veh_cap','Car deliveries cap (m/yr)',1,25,0.5],['rt_cap','Robotaxi fleet cap (m)',0.5,30,0.5],['rt_mid','Robotaxi S-curve midpoint',2028,2042,1],['rt_miles','Paid miles / robotaxi / yr (k)',20,90,1],
+ ['fsd_cap','Paid FSD subscribers cap (m)',5,80,1],['opt_cap','Optimus units cap (m/yr)',0.1,25,0.1],['opt_mid','Optimus S-curve midpoint',2030,2045,1],['en_cap','Energy storage cap (GWh/yr)',100,3000,50],
+ ['m0','EV/EBITDA multiple 2027 (x)',10,60,1],['mt','Mature EV/EBITDA multiple (x)',8,35,1],['sx_cap','SpaceX revenue cap ($bn/yr)',200,4000,50],['sx_m','SpaceX mature EBITDA margin',0.15,0.6,0.01],['dil','Tesla dilution / yr',0,0.03,0.0025]];
+let si=0, st={};
+const H=D.holdings;
+function fmt$(v){return v>=1e6?'$'+(v/1e6).toFixed(2)+'m':'$'+Math.round(v).toLocaleString('en-GB')}
+function fmtG(v){return v>=1e6?'£'+(v/1e6).toFixed(2)+'m':'£'+Math.round(v).toLocaleString('en-GB')}
+function pct(v){return (v*100).toFixed(v<0.1&&v>-0.1?1:0)+'%'}
+function isPct(k){return ['sx_m','dil'].includes(k)}
+function resetScenario(){SL.forEach(s=>st[s[0]]=D.sp[s[0]][si]);st.syn=D.sp.syn[si];}
+function S(y,A,cap,mid,k){const f=x=>1/(1+Math.exp(-k*(x-mid)));const L0=f(2026);return A+(cap-A)*(f(y)-L0)/(1-L0)}
+function run(i,useState){
+ const g=Object.assign({},D.glob,st.g); const p={};for(const k in D.sp)p[k]=D.sp[k][i];
+ if(useState){SL.forEach(s=>p[s[0]]=st[s[0]]);p.syn=st.syn}
+
+ const R=[];let prev=null;
+ for(let y=2026;y<=2047;y++){const t=y-2026,c=Math.min(1,t/g.ramp),r={y};
+  r.veh=S(y,g.veh0,p.veh_cap,p.veh_mid,p.veh_k);r.fleet=S(y,g.rt0,p.rt_cap,p.rt_mid,p.rt_k);
+  r.cumv=prev?prev.cumv-prev.fleet+r.veh+r.fleet:g.cumveh0+r.veh+r.fleet;
+  const asp=Math.max(p.asp_floor,g.asp0*Math.pow(1+p.asp_chg,t)),auto=r.veh*asp;
+  r.fsd=S(y,g.fsd0,p.fsd_cap,p.fsd_mid,p.fsd_k);const fsd=r.fsd*p.fsd_arpu*12/1000;
+  const avg=prev?(r.fleet+prev.fleet)/2:r.fleet/2,fare=Math.max(p.rt_fare_floor,g.fare0*Math.pow(1-g.fare_decl,t)),rt=avg*p.rt_miles*fare;
+  r.opt=S(y,g.opt0,p.opt_cap,p.opt_mid,p.opt_k);r.cumopt=r.opt+(prev?prev.cumopt:0);
+  const oasp=Math.max(p.opt_asp_floor,g.opt_asp0*Math.pow(1-g.opt_decl,t)),opt=r.opt*oasp;
+  r.en=S(y,g.en0,p.en_cap,p.en_mid,p.en_k);const ep=Math.max(p.en_floor,g.en_p0*Math.pow(1-g.en_decl,t)),en=r.en*ep/1000;
+  const svc=prev?prev.rev.svc*(1+p.svc_g*Math.pow(g.svc_fade,t-1)):g.svc0;
+  r.rev={auto,fsd,rt,opt,en,svc};const tr=auto+fsd+rt+opt+en+svc;r.tr=tr;const mg=(m0,m)=>m0+(m-m0)*c;
+  r.eb=auto*mg(g.auto_m0,p.auto_m)+fsd*p.fsd_m+rt*mg(g.rt_m0,p.rt_m)+opt*mg(g.opt_m0,p.opt_m)+en*mg(g.en_m0,p.en_m)+svc*p.svc_m-tr*g.unalloc;
+  r.mult=p.m0+(p.mt-p.m0)*Math.min(1,Math.max(0,(y-2027)/(g.mult_end-2027)));r.sh=g.shares*Math.pow(1+p.dil,t);
+  r.sxrev=S(y,g.sx_rev0,p.sx_cap,p.sx_mid,p.sx_k);r.sxeb=r.sxrev*mg(g.sx_m0,p.sx_m);r.sxsh=g.spx_shares*Math.pow(1+p.sx_dil,t);
+  R.push(r);prev=r}
+ for(let j=0;j<R.length-1;j++){const r=R[j],w=Math.min(1,(r.y-2026)/g.conv);
+  r.teq=w*(R[j+1].eb*r.mult+g.netcash)+(1-w)*g.price*g.shares;r.tp=r.teq/r.sh;
+  r.sxeq=w*(R[j+1].sxeb*r.mult)+(1-w)*g.spx_price*g.spx_shares;r.sxp=r.sxeq/r.sxsh}
+ R.pop();const my=g.merge_year,rm=R.find(r=>r.y==my);
+ let ratio=g.ratio_method=='Manual'?g.manual_ratio:(g.ratio_method.startsWith('Projected')?rm.tp/rm.sxp:g.price/g.spx_price)*(1+g.prem);
+ const shares=H.colin.shares+(g.incl_car?H.caroline.shares:0);
+ R.forEach(r=>{const m=g.merge&&r.y>=my;const comb=(r.teq+r.sxeq)*(1+(m?p.syn*Math.min(1,(r.y-my+1)/3):0));const csh=r.sxsh+r.sh*ratio;
+  r.merged=m;r.own=m?r.sh*ratio/csh:1;r.vps=m?ratio*comb/csh:r.tp;r.usd=r.vps*shares;r.gbp=r.usd/g.fx;r.real=r.gbp/Math.pow(1+g.infl,r.y-2026)});
+ return {R,ratio,shares,g};
+}
+const charts={};
+function mk(id,cfg){if(charts[id]){charts[id].data=cfg.data;charts[id].options=cfg.options;charts[id].update('none');return}charts[id]=new Chart(document.getElementById(id),cfg)}
+Chart.defaults.color='#c9cfd9';Chart.defaults.borderColor='#2a2f3a';Chart.defaults.font.size=11;
+function render(){
+ const A=run(si,true),all=[0,1,2].map(i=>i==si?A:run(i,false)),R=A.R,g=A.g;
+ const at=y=>R.find(r=>r.y==y);
+ const cost=H.colin.cost+(g.incl_car?H.caroline.cost:0),now=A.shares*g.price;
+ document.getElementById('kpis').innerHTML=[
+  ['My position now',fmtG(now/g.fx),`${A.shares.toFixed(2)} shares · ${pct(now/cost-1)} gain`],
+  ['2030 value / share',fmt$(at(2030).vps),fmtG(at(2030).gbp)+' position'],
+  ['2036 value / share',fmt$(at(2036).vps),fmtG(at(2036).gbp)+' position'],
+  ['2046 value / share',fmt$(at(2046).vps),fmtG(at(2046).gbp)+' · '+fmtG(at(2046).real)+' in today\'s £']
+ ].map(k=>`<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div></div>`).join('');
+ const yrs=R.map(r=>r.y),cols=['#e31937','#6ea8fe','#9aa3b2'];
+ mk('c1',{type:'line',data:{labels:yrs,datasets:all.map((a,i)=>({label:SC[i],data:a.R.map(r=>r.vps),borderColor:cols[i],backgroundColor:cols[i],borderWidth:i==si?4:1.5,pointRadius:0,tension:.25}))},
+  options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt$(c.raw)}}},scales:{y:{type:document.getElementById('logc')&&document.getElementById('logc').checked?'logarithmic':'linear',ticks:{callback:v=>'$'+Number(v).toLocaleString('en-GB')}}}}});
+ mk('c2',{type:'bar',data:{labels:yrs,datasets:[{label:'Position £',data:R.map(r=>r.gbp),backgroundColor:R.map(r=>r.merged?'#2fbf71':'#3b82f6')},{label:"In today's £",data:R.map(r=>r.real),backgroundColor:'rgba(255,255,255,.25)'}]},
+  options:{maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw)}}},scales:{y:{ticks:{callback:v=>v>=1e6?'£'+v/1e6+'m':'£'+v/1e3+'k'}}}}});
+ document.getElementById('c2s').textContent=g.merge?`Green bars = after the merger (${g.merge_year}). Grey = adjusted for ${(g.infl*100).toFixed(1)}% inflation.`:'No merger assumed.';
+ const segs=[['auto','Cars','#3b82f6'],['fsd','FSD','#a855f7'],['rt','Robotaxi','#2fbf71'],['opt','Optimus','#f0b429'],['en','Energy','#ef4444'],['svc','Services','#9aa3b2']];
+ mk('c3',{type:'bar',data:{labels:yrs,datasets:segs.map(s=>({label:s[1],data:R.map(r=>r.rev[s[0]]),backgroundColor:s[2]}))},options:{maintainAspectRatio:false,scales:{x:{stacked:true},y:{stacked:true}}}});
+ mk('c4',{type:'line',data:{labels:yrs,datasets:[{label:'Tesla',data:R.map(r=>r.teq/1000),borderColor:'#e31937',pointRadius:0},{label:'SpaceX',data:R.map(r=>r.sxeq/1000),borderColor:'#6ea8fe',pointRadius:0}]},options:{maintainAspectRatio:false}});
+ const ms=[['Market cap $8.5tn','teq',D.glob.ms_cap],['20m cumulative vehicles','cumv',D.glob.ms_veh],['10m paid FSD subs','fsd',D.glob.ms_fsd],['1m robotaxis operating','fleet',D.glob.ms_rt],['1m Optimus delivered','cumopt',D.glob.ms_bot],['$400bn adj. EBITDA','eb',D.glob.ms_ebitda]];
+ let met=0;document.getElementById('ms').innerHTML='<tr><th>Milestone</th><th>First year</th><th>By 2035?</th></tr>'+ms.map(m=>{const r=R.find(r=>r[m[1]]>=m[2]);const y=r?r.y:null;const s=y?(y<=D.glob.ms_year?'yes':'late'):'no';if(s=='yes')met++;return `<tr><td>${m[0]}</td><td>${y||'Not by 2046'}</td><td class="${s}">${s.toUpperCase()}</td></tr>`}).join('');
+ document.getElementById('mss').textContent=`${met} of 6 milestones met by ${D.glob.ms_year} in this scenario.`;
+ const own=A.ratio*g.shares/(g.spx_shares+A.ratio*g.shares);
+ document.getElementById('mm').innerHTML=[['Exchange ratio (SPCX per TSLA)',A.ratio.toFixed(3)],["Tesla holders' share of combined co",pct(own)],["Ratio at today's prices",(g.price/g.spx_price).toFixed(3)],['Ratio for 50/50 split',(g.spx_shares/g.shares).toFixed(3)],['SPCX shares you would get',(A.ratio*A.shares).toFixed(1)],['Value/share 2046 – standalone vs merged',fmt$(at(2046).tp)+' vs '+fmt$(at(2046).vps)]].map(r=>`<tr><td>${r[0]}</td><td><b>${r[1]}</b></td></tr>`).join('');
+ document.getElementById('yt').innerHTML='<tr><th>Year</th><th>Rev $bn</th><th>EBITDA $bn</th><th>Tesla $/sh</th><th>SPCX $/sh</th><th>Value/TSLA sh</th><th>Position £</th></tr>'+R.map(r=>`<tr class="${g.merge&&r.y==g.merge_year?'hl':''}"><td>${r.y}</td><td>${Math.round(r.tr).toLocaleString('en-GB')}</td><td>${Math.round(r.eb).toLocaleString('en-GB')}</td><td>${fmt$(r.tp)}</td><td>${fmt$(r.sxp)}</td><td><b>${fmt$(r.vps)}</b></td><td>${fmtG(r.gbp)}</td></tr>`).join('');
+ document.getElementById('ht').innerHTML='<tr><th>Owner / account</th><th>Shares</th><th>Avg $</th><th>Value £</th><th>Gain</th></tr>'+H.rows.map(h=>{const v=h[2]*g.price,c=h[2]*h[3];return `<tr><td>${h[0]} · ${h[1]}</td><td>${h[2]}</td><td>$${h[3]}</td><td>${fmtG(v/g.fx)}</td><td class="${v>=c?'yes':'no'}">${c?pct(v/c-1):'–'}</td></tr>`}).join('');
+}
+function bindSliders(){
+ document.getElementById('sliders').innerHTML='<div class="tog">Log scale on value chart<label class="sw"><input type="checkbox" id="logc"><span class="sl"></span></label></div>'+SL.map(s=>`<div class="ctl"><label>${s[1]} <b id="${s[0]}_v"></b></label><input type="range" id="${s[0]}" min="${s[2]}" max="${s[3]}" step="${s[4]}"></div>`).join('');
+ SL.forEach(s=>{const el=document.getElementById(s[0]);el.oninput=()=>{st[s[0]]=+el.value;showVals();render()}});
+ document.getElementById('logc').onchange=()=>{charts.c1&&charts.c1.destroy();delete charts.c1;render()};
+}
+function showVals(){
+ SL.forEach(s=>{const el=document.getElementById(s[0]);el.value=st[s[0]];document.getElementById(s[0]+'_v').textContent=isPct(s[0])?pct(st[s[0]]):(s[0].endsWith('_mid')?st[s[0]]:(+st[s[0]]).toLocaleString('en-GB'))});
+ const G=st.g;document.getElementById('merge_year').value=G.merge_year;document.getElementById('merge_year_v').textContent=G.merge_year;
+ document.getElementById('prem').value=G.prem;document.getElementById('prem_v').textContent=pct(G.prem);
+ document.getElementById('syn').value=st.syn;document.getElementById('syn_v').textContent=pct(st.syn);
+ document.getElementById('manual_ratio').value=G.manual_ratio;document.getElementById('manual_ratio_v').textContent=(+G.manual_ratio).toFixed(2);
+ document.getElementById('manwrap').style.display=G.ratio_method=='Manual'?'block':'none';
+}
+function init(){
+ st.g={merge:true,merge_year:D.glob.merge_year,ratio_method:D.glob.ratio_method,prem:D.glob.prem,manual_ratio:D.glob.manual_ratio,incl_car:false,price:D.glob.price,spx_price:D.glob.spx_price,fx:D.glob.fx};
+ document.getElementById('scen').innerHTML=SC.map((s,i)=>`<button data-i="${i}" class="${i==0?'on':''}">${s}</button>`).join('');
+ document.querySelectorAll('#scen button').forEach(b=>b.onclick=()=>{si=+b.dataset.i;document.querySelectorAll('#scen button').forEach(x=>x.classList.toggle('on',x==b));resetScenario();showVals();render()});
+ bindSliders();resetScenario();
+ const G=st.g,$=id=>document.getElementById(id);
+ $('merge').onchange=e=>{G.merge=e.target.checked;render()};$('incl_car').onchange=e=>{G.incl_car=e.target.checked;render()};
+ $('merge_year').oninput=e=>{G.merge_year=+e.target.value;showVals();render()};$('prem').oninput=e=>{G.prem=+e.target.value;showVals();render()};
+ $('syn').oninput=e=>{st.syn=+e.target.value;showVals();render()};$('manual_ratio').oninput=e=>{G.manual_ratio=+e.target.value;showVals();render()};
+ $('ratio_method').value=G.ratio_method;$('ratio_method').onchange=e=>{G.ratio_method=e.target.value;showVals();render()};
+ ['price','spx_price','fx'].forEach(k=>{$(k).value=G[k];$(k).oninput=e=>{const v=parseFloat(e.target.value);if(v>0){G[k]=v;render()}}});
+ $('src').innerHTML=D.sources.map(s=>`<li><b>${s[0]}</b> ${s[1]} (${s[2]})${s[3].startsWith('http')?` – <a href="${s[3]}" target="_blank" rel="noopener">link</a>`:''}</li>`).join('');
+ showVals();render();
+}
+init();
+</script></body></html>

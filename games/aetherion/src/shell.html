@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Aetherion">
+<meta name="theme-color" content="#7cc4ec">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Aetherion: Skybound Realms</title>
+<style>/*CSS*/</style>
+</head>
+<body>
+<div id="game"><canvas id="c"></canvas></div>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="hud" class="hidden">
+  <div id="tl">
+    <div id="hearts"></div>
+    <div id="weapon"><span id="wIcon"></span><div id="wBar"><i></i></div></div>
+  </div>
+  <div id="compass"><div id="compassStrip"></div><div id="compassTick"></div></div>
+  <div id="tr">
+    <div id="coreCount"><span class="gem"></span><b id="coreN">0</b><small id="coreG">/20</small></div>
+    <button class="iconbtn" id="bMap" aria-label="Map">🗺</button>
+    <button class="iconbtn" id="bBag" aria-label="Bag">🎒</button>
+    <button class="iconbtn" id="bPause" aria-label="Pause">❚❚</button>
+  </div>
+  <div id="abilities"></div>
+  <svg id="stam" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" class="bg"/><circle cx="22" cy="22" r="18" class="fg" id="stamFg"/><circle cx="22" cy="22" r="12" class="fg2" id="stamFg2"/></svg>
+  <div id="crosshair"></div>
+  <div id="prompt"></div>
+  <div id="buildTag">FORGE HAND</div>
+  <div id="toasts"></div>
+  <div id="biomeName"></div>
+  <!-- touch -->
+  <div id="stickBase"><div id="stickKnob"></div></div>
+  <div id="pad">
+    <button class="tb big" id="tJump" data-k="jump"><span>Jump</span></button>
+    <button class="tb" id="tAttack" data-k="attack"><span>Attack</span></button>
+    <button class="tb" id="tSprint" data-k="sprint"><span>Sprint</span></button>
+    <button class="tb small" id="tDash" data-k="dash"><span>Dash</span></button>
+    <button class="tb forge" id="tForge" data-k="forge"><span>Forge</span></button>
+    <button class="tb act" id="tAct" data-k="act"><span>Use</span></button>
+  </div>
+  <div id="bpad">
+    <button class="tb" id="tGrab" data-k="grab"><span>Grab</span></button>
+    <button class="tb" id="tRotY" data-k="roty"><span>Rotate&nbsp;Y</span></button>
+    <button class="tb" id="tRotX" data-k="rotx"><span>Rotate&nbsp;X</span></button>
+    <button class="tb gold" id="tAttach" data-k="attach"><span>Attach</span></button>
+    <button class="tb" id="tDetach" data-k="detach"><span>Detach</span></button>
+    <button class="tb" id="tParts" data-k="parts"><span>Parts</span></button>
+  </div>
+  <div id="partsMenu" class="sheet hidden"><div class="sheetHead">Forge parts <button class="x" data-close="partsMenu">✕</button></div><div id="partsList"></div></div>
+</div>
+<div id="panel" class="hidden"></div>
+<div id="mapWrap" class="hidden"><canvas id="mapC"></canvas><div class="mapHead">Realm Map <button class="x" id="mapClose">✕</button></div><div id="mapLegend"></div></div>
+<div id="title">
+  <div class="tInner">
+    <div class="logo">AETHERION</div>
+    <div class="sub">Skybound Realms</div>
+    <div class="tBtns"><button class="pill gold" id="bPlay">Begin</button><button class="pill" id="bNew" style="display:none">New Journey</button></div>
+    <div class="hint" id="tHint"></div>
+  </div>
+</div>
+<div id="ending" class="hidden"><div class="eInner"><div class="logo small">The Realm Remembers</div><p id="endText"></p><button class="pill gold" id="bEndCont">Keep Exploring</button></div></div>
+<div id="loader"><div class="spin"></div><div class="lt">Aetherion</div></div>
+<div id="err" class="hidden"><div class="card"><b>Something went wrong</b><p id="errMsg"></p><button class="pill gold" onclick="location.reload()">Tap to reload</button></div></div>
+<script>
+(function(){
+  window.__bootErr = function(m){ try{ var e=document.getElementById('err'); document.getElementById('errMsg').textContent=String(m).slice(0,300); e.classList.remove('hidden'); document.getElementById('loader').style.display='none'; }catch(x){} };
+  window.addEventListener('error', function(ev){ if(!window.__booted) window.__bootErr(ev.message||'Error'); });
+  window.addEventListener('unhandledrejection', function(ev){ if(!window.__booted) window.__bootErr((ev.reason&&ev.reason.message)||'Error'); });
+  setTimeout(function(){ var l=document.getElementById('loader'); if(l) l.style.display='none'; }, 9000);
+})();
+</script>
+<script>/*THREE*/</script>
+<script>/*CORE*/</script>
+<script>/*MAIN*/</script>
+</body>
+</html>

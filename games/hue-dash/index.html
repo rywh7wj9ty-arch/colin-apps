@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Hue Dash</title>
+<meta name="theme-color" content="#f3eee9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hue Dash">
+<link rel="manifest" href="manifest.webmanifest?v=__V__">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="stylesheet" href="style.css?v=__V__">
+<script>
+// Boot guard: any error before the game is up shows a "Tap to reload" card instead of an endless spinner.
+window.__V = '__V__';
+window.__bootFail = function (msg) {
+  if (window.__booted) return;
+  var e = document.getElementById('err'); if (!e) return;
+  document.getElementById('loading').style.display = 'none';
+  e.style.display = 'flex'; document.getElementById('errmsg').textContent = String(msg).slice(0, 300);
+};
+window.addEventListener('error', function (ev) { window.__bootFail(ev.message || 'Script error'); });
+window.addEventListener('unhandledrejection', function (ev) { window.__bootFail((ev.reason && ev.reason.message) || ev.reason); });
+setTimeout(function () { if (!window.__booted) window.__bootFail('Loading took too long.'); }, 15000);
+</script>
+</head>
+<body>
+<div id="game"></div>
+<div id="flash"></div><div id="fx"></div>
+<div id="loading"><div class="spin"></div></div>
+<div id="err" onclick="location.reload()"><b>Something went wrong</b><span id="errmsg"></span><em>Tap to reload</em></div>
+
+<div id="title" class="screen">
+  <h1 class="logo"><span class="l1">Hue</span> <span class="l2">Dash</span></h1>
+  <div class="tag">run · match · fly</div>
+  <div class="howto"><span class="k l">◐ tap left · change colour</span><span class="k r">⤒ tap right · jump</span></div>
+  <div class="corner left">
+    <button class="rb pink" id="bSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm9 4.6v-2.2l-2.4-.5a7 7 0 0 0-.8-1.9l1.4-2-1.6-1.6-2 1.4a7 7 0 0 0-1.9-.8L13.2 3h-2.4l-.5 2.4a7 7 0 0 0-1.9.8l-2-1.4-1.6 1.6 1.4 2a7 7 0 0 0-.8 1.9L3 10.9v2.2l2.4.5c.2.7.4 1.3.8 1.9l-1.4 2 1.6 1.6 2-1.4c.6.4 1.2.6 1.9.8l.5 2.5h2.4l.5-2.5c.7-.2 1.3-.4 1.9-.8l2 1.4 1.6-1.6-1.4-2c.4-.6.6-1.2.8-1.9z"/></svg></button>
+    <button class="rb gold" id="bStats" aria-label="Trophies"><svg viewBox="0 0 24 24"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V18h3v3H8v-3h3v-3.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3zm0 4H6v1a2 2 0 0 0 1 1.7zm10 0v2.7A2 2 0 0 0 18 8V7z"/></svg></button>
+    <button class="rb teal" id="bWardrobe" aria-label="Wardrobe"><svg viewBox="0 0 24 24"><path d="M8 3l4 2 4-2 5 4-3 4-2-1v11H8V10l-2 1-3-4z"/></svg></button>
+  </div>
+  <div class="corner right"><button class="rb blue big" id="bPlay" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+  <div id="starTotal" class="startotal"></div>
+</div>
+
+<div id="levels" class="screen">
+  <div class="topbar"><button class="rb small grey" id="bBack1" aria-label="Back">‹</button><div class="wname" id="wName"></div><div class="wstars" id="wStars"></div></div>
+  <div class="wnav"><button class="rb small grey" id="wPrev">‹</button><div id="lgrid"></div><button class="rb small grey" id="wNext">›</button></div>
+</div>
+
+<div id="hud">
+  <button class="rb small grey" id="bPause" aria-label="Pause"><svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zm7 0h3v14h-3z"/></svg></button>
+  <div class="hudmid"><span id="hTime">0.00</span><span id="hGems"></span><span id="hSw"></span></div>
+  <div id="hint"><div class="hl">tap left<br><b>switch colour</b></div><div class="hr">tap right<br><b>jump</b> · hold higher</div></div>
+  <div id="banner"></div>
+  <div id="replayTag">REPLAY · tap to stop</div>
+</div>
+
+<div id="pause" class="screen modal">
+  <div class="card">
+    <h2>Paused</h2>
+    <div class="audio"></div>
+    <label class="row"><span>Ghost of best run</span><input type="checkbox" id="optGhost"></label>
+    <div class="btns"><button class="pill" id="pRestart">Restart</button><button class="pill" id="pQuit">Levels</button><button class="pill primary" id="pResume">Resume</button></div>
+  </div>
+</div>
+
+<div id="settings" class="screen modal">
+  <div class="card">
+    <h2>Settings</h2>
+    <div class="audio"></div>
+    <label class="row"><span>Reduced effects (smoother on older phones)</span><input type="checkbox" id="optReduced"></label>
+    <label class="row"><span>Ghost of best run</span><input type="checkbox" id="optGhost2"></label>
+    <div class="btns"><button class="pill primary" id="sClose">Done</button></div>
+  </div>
+</div>
+
+<div id="results" class="screen modal">
+  <div class="card">
+    <h2 id="rTitle">Level clear!</h2>
+    <div class="rstars" id="rStars"></div>
+    <div id="rGoals"></div>
+    <div class="btns"><button class="pill" id="rRetry">Retry</button><button class="pill" id="rWatch">Watch best</button><button class="pill" id="rLevels">Levels</button><button class="pill primary" id="rNext">Next</button></div>
+  </div>
+</div>
+
+<div id="stats" class="screen modal"><div class="card wide"><h2>Trophies</h2><div id="statGrid"></div><div id="achList"></div><div class="btns"><button class="pill primary" id="stClose">Done</button></div></div></div>
+<div id="wardrobe" class="screen modal"><div class="card wide"><h2>Wardrobe</h2><p class="sub">Earn stars to unlock looks. Just for style.</p><h3>Outfit</h3><div id="wOutfit" class="wgrid"></div><h3>Board</h3><div id="wBoard" class="wgrid"></div><div class="btns"><button class="pill primary" id="wClose">Done</button></div></div></div>
+
+<div id="rotate">Turn your phone sideways for the best view</div>
+<div id="toasts"></div>
+<script type="module" src="game.js?v=__V__"></script>
+</body>
+</html>

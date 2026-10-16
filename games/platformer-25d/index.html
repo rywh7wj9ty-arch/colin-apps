@@ -1,0 +1,29 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#1e1b4b">
+<title>2.5D Platformer — Two Directions</title><link rel="apple-touch-icon" href="icon-180.png">
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",system-ui,sans-serif;color:#fff;background:radial-gradient(1200px 700px at 20% 0%,#4f7dff55,transparent),radial-gradient(900px 600px at 90% 100%,#ff7a3d44,transparent),#1e1b4b;padding:calc(env(safe-area-inset-top) + 28px) calc(env(safe-area-inset-right) + 18px) calc(env(safe-area-inset-bottom) + 28px) calc(env(safe-area-inset-left) + 18px)}
+h1{margin:0 auto 6px;max-width:980px;font-size:clamp(28px,6vw,46px);letter-spacing:-.5px}
+.sub{max-width:980px;margin:0 auto 24px;color:#c9c6ff;line-height:1.5}
+.grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+a.card{display:block;text-decoration:none;color:inherit;border-radius:26px;overflow:hidden;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);box-shadow:0 18px 50px rgba(0,0,0,.35);transition:transform .2s}
+a.card:active{transform:scale(.98)}
+.card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#333}
+.card .b{padding:16px 18px 20px}
+.tag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;margin-bottom:8px}
+.a .tag{background:#ffd23f;color:#3a2a00}.bb .tag{background:#9ff3ff;color:#102a40}
+.card h2{margin:0 0 6px;font-size:26px}.card p{margin:0 0 12px;color:#dcdaf5;line-height:1.45;font-size:15px}
+.play{display:inline-block;font-weight:800;padding:12px 20px;border-radius:14px}
+.a .play{background:linear-gradient(180deg,#ff8a3d,#ff5e62)}.bb .play{background:linear-gradient(180deg,#6a8cff,#a46bff)}
+.foot{max-width:980px;margin:26px auto 0;color:#a9a6d9;font-size:13px;line-height:1.5}
+.foot a{color:#fff}
+</style></head><body>
+<h1>Two 2.5D directions</h1>
+<p class="sub">Same engine, same side-on camera, everything modelled in 3D, and two very different feels. Play both and see which one you'd want as a full game. Works on iPhone, iPad and desktop.</p>
+<div class="grid">
+<a class="card a" href="a/"><img src="cards/a.jpg" alt="Pip and the Sky Gardens"><div class="b"><span class="tag">Concept A · Classic run &amp; jump</span><h2>Pip &amp; the Sky Gardens</h2><p>Bright toy-box platforming across floating gardens. Bounce on mushrooms, hop on beetles, collect sun seeds, and wake a giant Sky Whale to cross the clouds.</p><span class="play">Play A ▶</span></div></a>
+<a class="card bb" href="b/"><img src="cards/b.jpg" alt="Elderglow"><div class="b"><span class="tag">Concept B · Ori-style light hybrid</span><h2>Elderglow</h2><p>A luminous, wistful forest where light is your power. Flare to push back the dark thorns, light up hidden paths, and bring the wisps home to the Elder Tree.</p><span class="play">Play B ▶</span></div></a>
+</div>
+<p class="foot">Each concept has its own pause menu with Music, Sound FX and Brightness sliders, plus a stats screen. Both save on this device and keep working offline once loaded. Rendering uses WebGPU where available, with automatic WebGL2 fallback.</p>
+</body></html>

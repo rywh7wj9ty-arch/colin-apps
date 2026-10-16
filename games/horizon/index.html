@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 64%27%3E%3Ccircle cx=%2732%27 cy=%2732%27 r=%2728%27 fill=%27%23000%27 stroke=%27%23ff6b4a%27 stroke-width=%273%27/%3E%3C/svg%3E">
+<title>HORIZON · a spinning black hole</title>
+<style>
+  :root{ --glass:rgba(12,14,22,.55); --line:rgba(255,255,255,.12); --txt:#e8eef8; --muted:#8b95a8; --acc:#7eb6ff; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:#000;color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;overflow:hidden;touch-action:none;}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;}
+  #loader{position:fixed;inset:0;z-index:40;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s;}
+  #loader.out{opacity:0;pointer-events:none;}
+  #loader h1{font-weight:300;letter-spacing:.55em;font-size:22px;margin:0 0 18px;}
+  #loader .ring{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.15);border-top-color:#fff;animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #cinebar{display:none;position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#7eb6ff,#ffb07e);z-index:30;width:0;}
+  #skip{position:fixed;top:14px;right:14px;z-index:31;background:var(--glass);backdrop-filter:blur(12px);border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:999px;font-size:12px;cursor:pointer;}
+  #title{position:fixed;top:18px;left:18px;z-index:20;pointer-events:none;transition:opacity .4s;}
+  #title h1{font-weight:300;letter-spacing:.5em;font-size:15px;margin:0;}
+  #title p{margin:6px 0 0;font-size:11px;color:var(--muted);letter-spacing:.04em;}
+  #caption{position:fixed;left:50%;bottom:118px;transform:translateX(-50%) translateY(8px);z-index:22;max-width:min(520px,88vw);text-align:center;font-size:13px;line-height:1.45;color:#d7deea;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);padding:10px 16px;border-radius:14px;border:1px solid var(--line);opacity:0;pointer-events:none;transition:opacity .35s, transform .35s;}
+  #caption.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #readout,#fps{position:fixed;z-index:20;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;pointer-events:none;transition:opacity .4s;}
+  #readout{top:18px;right:18px;text-align:right;}
+  #fps{top:40px;right:18px;}
+  .hud{transition:opacity .4s, transform .4s;}
+  body.hud-hidden .hud, body.hud-hidden #title, body.hud-hidden #readout, body.hud-hidden #fps, body.hud-hidden #skip{opacity:0;pointer-events:none;}
+  /* Desktop rail */
+  #rail{position:fixed;top:50%;right:14px;transform:translateY(-50%);z-index:21;width:210px;padding:14px;border-radius:18px;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--line);display:none;flex-direction:column;gap:10px;}
+  @media(min-width:820px){#rail{display:flex;} #sheet{display:none !important;} #caption{bottom:36px;}}
+  label.spinlab{font-size:11px;color:var(--muted);}
+  input[type=range]{width:100%;accent-color:var(--acc);}
+  .row{display:flex;flex-wrap:wrap;gap:6px;}
+  button,.modebtn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--txt);border-radius:12px;padding:8px 10px;font-size:12px;cursor:pointer;}
+  button:active,.modebtn:active{transform:scale(.97);}
+  button.on,.modebtn.on{border-color:rgba(126,182,255,.55);background:rgba(126,182,255,.15);}
+  .hint{font-size:10px;color:var(--muted);line-height:1.35;}
+  /* Phone sheet */
+  #sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:linear-gradient(180deg,rgba(8,10,16,.72),rgba(8,10,16,.92));backdrop-filter:blur(18px);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:0 16px 22px;padding-bottom:max(22px,env(safe-area-inset-bottom));transform:translateY(calc(100% - 72px));transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+  #sheet.open{transform:translateY(0);}
+  #sheet-handle{height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;}
+  #sheet-handle .pill{width:42px;height:4px;border-radius:4px;background:rgba(255,255,255,.28);}
+  #sheet-handle .quick{display:flex;gap:8px;width:100%;justify-content:center;}
+  #sheet .body{display:flex;flex-direction:column;gap:12px;padding-bottom:8px;}
+  .compare-tag{position:fixed;top:50%;z-index:15;font-size:11px;color:var(--muted);letter-spacing:.08em;pointer-events:none;display:none;}
+  body.comparing .compare-tag{display:block;}
+  #tagL{left:8%;transform:translateY(-50%);} #tagR{right:8%;transform:translateY(-50%);}
+</style>
+</head>
+<body>
+<div id="loader"><h1>HORIZON</h1><div class="ring"></div></div>
+<div id="cinebar"></div>
+<button id="skip" class="hud" type="button">Skip</button>
+<canvas id="c"></canvas>
+<div id="title" class="hud"><h1>HORIZON</h1><p>light, bent</p></div>
+<div id="readout" class="hud"></div>
+<div id="fps" class="hud"></div>
+<div id="caption"></div>
+<div class="compare-tag" id="tagL">SCHWARZSCHILD</div>
+<div class="compare-tag" id="tagR">KERR</div>
+
+<aside id="rail" class="hud">
+  <label class="spinlab" id="spinlab">a = 0.700 · Kerr</label>
+  <input id="spin" type="range" min="0" max="0.998" step="0.002" value="0.7">
+  <div class="row">
+    <button type="button" id="btn-drop">Drop probe</button>
+    <button type="button" id="btn-light" class="modebtn" data-mode="light">Light</button>
+    <button type="button" id="btn-fabric" class="modebtn" data-mode="fabric">Fabric</button>
+    <button type="button" id="btn-fall" class="modebtn" data-mode="fall">Fall in</button>
+  </div>
+  <div class="row">
+    <button type="button" id="btn-compare">Compare</button>
+    <button type="button" id="btn-photo">Photo</button>
+    <button type="button" id="btn-audio">Audio</button>
+    <button type="button" id="btn-hide">Cinema</button>
+  </div>
+  <p class="hint">Drag orbit · pinch zoom · double-tap reset. Kerr lensing via Schwarzschild null geodesics + Lense–Thirring frame drag (approx).</p>
+</aside>
+
+<div id="sheet" class="hud">
+  <div id="sheet-handle">
+    <div class="pill"></div>
+    <div class="quick">
+      <button type="button" id="q-drop">Drop</button>
+      <button type="button" id="q-light">Light</button>
+      <button type="button" id="q-fabric">Fabric</button>
+      <button type="button" id="q-fall">Fall</button>
+    </div>
+  </div>
+  <div class="body">
+    <label class="spinlab" id="spinlab2">Spin</label>
+    <input id="spin2" type="range" min="0" max="0.998" step="0.002" value="0.7">
+    <div class="row">
+      <button type="button" id="m-compare">Compare</button>
+      <button type="button" id="m-photo">Photo</button>
+      <button type="button" id="m-audio">Audio</button>
+      <button type="button" id="m-hide">Cinema</button>
+    </div>
+    <p class="hint">a = 0 is Schwarzschild. Near 1, the shadow goes D-shaped and light is dragged around.</p>
+  </div>
+</div>
+
+<script>
+// Three.js r134: CDN chain then local
+(function(){
+  var urls = [
+    'https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js',
+    'https://unpkg.com/three@0.134.0/build/three.min.js',
+    'three.min.js'
+  ];
+  function load(i){
+    if(i>=urls.length){ document.getElementById('loader').innerHTML='<p style="color:#fff">Failed to load Three.js</p>'; return; }
+    var s=document.createElement('script'); s.src=urls[i];
+    s.onload=function(){ boot(); };
+    s.onerror=function(){ load(i+1); };
+    document.head.appendChild(s);
+  }
+  function boot(){
+    var a=document.createElement('script'); a.src='src/shaders.js';
+    a.onload=function(){ var b=document.createElement('script'); b.src='src/app.js'; document.body.appendChild(b); };
+    document.body.appendChild(a);
+  }
+  load(0);
+})();
+</script>
+<script>
+// Mirror phone controls to desktop handlers once app exists
+document.addEventListener('DOMContentLoaded', function(){
+  function bridge(){
+    if(!window.HORIZON){ setTimeout(bridge, 100); return; }
+    var spin=document.getElementById('spin');
+    var spin2=document.getElementById('spin2');
+    spin2.addEventListener('input', function(){ spin.value=spin2.value; spin.dispatchEvent(new Event('input')); document.getElementById('spinlab2').textContent=document.getElementById('spinlab').textContent; });
+    spin.addEventListener('input', function(){ spin2.value=spin.value; document.getElementById('spinlab2').textContent=document.getElementById('spinlab').textContent; });
+    document.getElementById('q-drop').onclick=function(){ document.getElementById('btn-drop').click(); };
+    document.getElementById('q-light').onclick=function(){ document.getElementById('btn-light').click(); };
+    document.getElementById('q-fabric').onclick=function(){ document.getElementById('btn-fabric').click(); };
+    document.getElementById('q-fall').onclick=function(){ document.getElementById('btn-fall').click(); };
+    document.getElementById('m-compare').onclick=function(){ document.getElementById('btn-compare').click(); document.body.classList.toggle('comparing', document.getElementById('btn-compare').classList.contains('on')); };
+    document.getElementById('btn-compare').addEventListener('click', function(){ document.body.classList.toggle('comparing', document.getElementById('btn-compare').classList.contains('on')); });
+    document.getElementById('m-photo').onclick=function(){ document.getElementById('btn-photo').click(); };
+    document.getElementById('m-audio').onclick=function(){ document.getElementById('btn-audio').click(); };
+    document.getElementById('m-hide').onclick=function(){ document.getElementById('btn-hide').click(); };
+  }
+  bridge();
+});
+</script>
+</body>
+</html>

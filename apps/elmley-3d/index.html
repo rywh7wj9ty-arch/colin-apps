@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#1a2e24" />
+<title>Elmley Nature Reserve — Interactive 3D Map</title>
+<style>
+  :root {
+    --bg: #0e1a14;
+    --panel: #1a2a22;
+    --panel-border: #2d4538;
+    --text: #e8f0ea;
+    --muted: #8aa898;
+    --accent: #4a9b6e;
+    --accent-hover: #5bb87e;
+    --path: #e04a3a;
+    --water: #7a9aaa;
+    --creek: #2a6a72;
+    --salt: #c8d080;
+    --land: #7a9a6a;
+    --card: #15241c;
+    --danger: #d4a017;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  #title-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+    min-height: 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 8px 12px 8px 16px;
+    background: linear-gradient(180deg, #15241c 0%, #0e1a14ee 100%);
+    border-bottom: 1px solid var(--panel-border);
+  }
+  #title-bar .titles { min-width: 0; }
+  #title-bar .title { font-weight: 700; font-size: 14px; color: var(--text); display: block; }
+  #title-bar .ref { color: var(--muted); font-size: 11px; display: block; margin-top: 1px; }
+  #title-bar .badge {
+    background: var(--accent); color: #fff; font-size: 10px;
+    padding: 4px 9px; border-radius: 4px; font-weight: 700;
+    letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+  }
+  #btn-panel-toggle {
+    display: none;
+    background: #243d32; color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 8px 12px;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    min-height: 40px; min-width: 44px;
+  }
+
+  #canvas-wrap {
+    position: absolute; inset: 48px 0 0 0;
+  }
+  #label-overlay {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 5;
+  }
+  .css-label {
+    position: absolute; transform: translate(-50%, -120%);
+    background: rgba(14,26,20,0.88);
+    border: 1px solid var(--panel-border);
+    color: var(--text); font-size: 10px; font-weight: 700;
+    padding: 3px 7px; border-radius: 4px; white-space: nowrap;
+    pointer-events: none; letter-spacing: 0.02em;
+  }
+  .css-label.hide-num {
+    background: rgba(196,58,42,0.92); border-color: #e04a3a; color: #fff;
+    width: 22px; height: 22px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; font-size: 11px; transform: translate(-50%, -50%);
+  }
+
+  #ui-panel {
+    position: fixed; top: 60px; right: 12px; z-index: 50;
+    width: 320px; max-height: calc(100vh - 80px);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    padding: 14px 14px 18px;
+    font-size: 12px;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+  #ui-panel.collapsed {
+    transform: translateY(110%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  #ui-panel h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin: 14px 0 8px; font-weight: 700;
+  }
+  #ui-panel h2:first-child { margin-top: 0; }
+  #ui-panel .panel-title {
+    font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px;
+  }
+  #ui-panel .panel-sub {
+    font-size: 11px; color: var(--muted); margin-bottom: 8px; line-height: 1.35;
+  }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin: 7px 0; min-height: 36px;
+  }
+  .row label { color: var(--text); flex: 1; cursor: pointer; user-select: none; font-size: 13px; }
+  input[type="checkbox"] {
+    width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0;
+  }
+  .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  button {
+    flex: 1; min-width: 0;
+    background: #243d32; color: var(--text);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 10px 12px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    min-height: 42px;
+  }
+  button:hover, button:focus-visible { background: #2d4f40; border-color: var(--accent); outline: none; }
+  button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.secondary { background: #1e3328; }
+
+  #legend { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--panel-border); }
+  .legend-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; margin: 2px 0; border-radius: 6px;
+    color: var(--muted); font-size: 12px; min-height: 36px;
+  }
+  .legend-item .swatch {
+    width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .legend-item .swatch.line {
+    height: 3px; width: 18px; border-radius: 1px; border: none;
+  }
+  .legend-item .swatch.dash {
+    height: 3px; width: 18px; border-radius: 1px; border: none;
+    background: repeating-linear-gradient(90deg, #e8e8e8 0 4px, transparent 4px 8px) !important;
+  }
+  .legend-item .swatch.circle {
+    border-radius: 50%; background: transparent !important;
+    border: 2px solid #4a90c8;
+  }
+
+  #north-indicator {
+    position: fixed; top: 60px; left: 12px; z-index: 35;
+    width: 52px; height: 52px;
+    background: rgba(26,42,34,0.92);
+    border: 1px solid var(--panel-border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  #north-indicator .arrow {
+    width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 16px solid #e04a3a;
+    position: absolute; top: 8px;
+  }
+  #north-indicator .n {
+    position: absolute; bottom: 6px; font-size: 11px; font-weight: 800; color: var(--text);
+  }
+
+  #scale-bar {
+    position: fixed; bottom: 16px; left: 12px; z-index: 35;
+    background: rgba(26,42,34,0.92);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px; padding: 8px 12px;
+    font-size: 11px; color: var(--muted);
+  }
+  #scale-bar .bar {
+    width: 60px; height: 6px; margin-top: 4px;
+    background: linear-gradient(90deg, #fff 0 50%, transparent 50% 100%);
+    background-size: 15px 6px;
+    border: 1px solid #fff; border-radius: 1px;
+  }
+  #scale-bar .labels {
+    display: flex; justify-content: space-between; width: 60px; margin-top: 2px;
+    font-size: 9px; color: var(--text);
+  }
+
+  #hint {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 35; font-size: 11px; color: var(--muted);
+    background: rgba(14,26,20,0.8); padding: 7px 14px; border-radius: 20px;
+    pointer-events: none; transition: opacity 0.5s; white-space: nowrap;
+  }
+
+  #info-card {
+    display: none;
+    position: fixed; z-index: 60;
+    left: 12px; right: 12px; bottom: 16px;
+    max-width: 420px; margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+    padding: 16px 16px 14px;
+    max-height: 48vh; overflow-y: auto;
+  }
+  #info-card.open { display: block; }
+  #info-card h3 {
+    font-size: 16px; font-weight: 700; margin-bottom: 4px; padding-right: 28px;
+  }
+  #info-card .meta {
+    font-size: 11px; color: var(--accent-hover); margin-bottom: 8px; font-weight: 600;
+  }
+  #info-card .body {
+    font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 10px;
+  }
+  #info-card .dist {
+    font-size: 12px; color: var(--text);
+    background: #243d32; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px;
+  }
+  #info-card .dist strong { color: var(--accent-hover); }
+  #info-card .card-actions { display: flex; gap: 8px; }
+  #info-card .card-actions button { flex: 1; }
+  #info-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 36px; height: 36px; min-height: 36px; flex: none;
+    border-radius: 8px; font-size: 18px; padding: 0;
+    background: #243d32;
+  }
+
+  #tips-drawer {
+    display: none;
+    position: fixed; z-index: 55;
+    left: 12px; right: 12px; bottom: 16px;
+    max-width: 480px; margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+    padding: 16px;
+    max-height: 55vh; overflow-y: auto;
+  }
+  #tips-drawer.open { display: block; }
+  #tips-drawer h3 { font-size: 15px; margin-bottom: 10px; padding-right: 28px; }
+  #tips-drawer ul { padding-left: 18px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  #tips-drawer li { margin-bottom: 6px; }
+  #tips-drawer a { color: var(--accent-hover); }
+  #tips-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 36px; height: 36px; min-height: 36px; flex: none;
+    border-radius: 8px; font-size: 18px; padding: 0;
+  }
+
+  #fallback-banner {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: var(--bg); color: var(--text);
+    align-items: center; justify-content: center; padding: 24px; text-align: center;
+  }
+  #fallback-banner.show { display: flex; }
+  #fallback-banner .box {
+    max-width: 420px; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; padding: 28px 24px;
+  }
+  #fallback-banner h1 { font-size: 16px; margin-bottom: 12px; color: var(--danger); }
+  #fallback-banner p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: #3a5a48; border-radius: 3px; }
+
+  @media (max-width: 720px) {
+    #title-bar { flex-wrap: wrap; }
+    #btn-panel-toggle { display: inline-flex; align-items: center; justify-content: center; }
+    #ui-panel {
+      top: auto; bottom: 0; right: 0; left: 0;
+      width: 100%; max-height: 48vh;
+      border-radius: 16px 16px 0 0;
+      padding-bottom: max(18px, env(safe-area-inset-bottom));
+    }
+    #ui-panel.collapsed { transform: translateY(105%); }
+    #scale-bar { bottom: calc(12px + env(safe-area-inset-bottom)); }
+    #hint { bottom: calc(12px + env(safe-area-inset-bottom)); font-size: 10px; max-width: 70%; white-space: normal; text-align: center; }
+    #info-card, #tips-drawer {
+      bottom: calc(12px + env(safe-area-inset-bottom));
+      max-height: 42vh;
+    }
+    #north-indicator { top: 56px; left: 8px; width: 44px; height: 44px; }
+  }
+  @media (min-width: 721px) {
+    #ui-panel.collapsed { transform: none; opacity: 1; pointer-events: auto; }
+  }
+</style>
+</head>
+<body>
+  <div id="fallback-banner" role="alert">
+    <div class="box">
+      <h1>3D libraries did not load</h1>
+      <p>This viewer needs a network connection once to load Three.js, then open this file in Safari/Chrome (not as a text preview).</p>
+    </div>
+  </div>
+
+  <div id="title-bar">
+    <div class="titles">
+      <span class="title">Elmley Nature Reserve</span>
+      <span class="ref">Isle of Sheppey · Kent · Interactive 3D map</span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button type="button" id="btn-panel-toggle" aria-expanded="true" aria-controls="ui-panel">Controls</button>
+      <span class="badge">NNR</span>
+    </div>
+  </div>
+
+  <div id="canvas-wrap">
+    <div id="label-overlay"></div>
+  </div>
+
+  <div id="north-indicator" aria-hidden="true">
+    <div class="arrow"></div>
+    <div class="n">N</div>
+  </div>
+
+  <div id="ui-panel" role="region" aria-label="Map controls">
+    <div class="panel-title">Elmley Nature Reserve</div>
+    <div class="panel-sub">Family-owned National Nature Reserve · Kingshill Farm, ME12 3RN</div>
+
+    <h2>Layers</h2>
+    <div class="row"><label for="tog-paths">Paths &amp; tracks</label><input type="checkbox" id="tog-paths" checked /></div>
+    <div class="row"><label for="tog-buildings">Buildings</label><input type="checkbox" id="tog-buildings" checked /></div>
+    <div class="row"><label for="tog-hides">Bird hides &amp; markers</label><input type="checkbox" id="tog-hides" checked /></div>
+    <div class="row"><label for="tog-water">Waterways / creeks</label><input type="checkbox" id="tog-water" checked /></div>
+    <div class="row"><label for="tog-salt">Salt marsh bands</label><input type="checkbox" id="tog-salt" checked /></div>
+    <div class="row"><label for="tog-wildlife">Wildlife markers</label><input type="checkbox" id="tog-wildlife" checked /></div>
+    <div class="row"><label for="tog-labels">Name labels</label><input type="checkbox" id="tog-labels" checked /></div>
+
+    <h2>Camera presets</h2>
+    <div class="btn-row">
+      <button type="button" id="btn-overview" class="active">Overview</button>
+      <button type="button" id="btn-walk">Walk the hides</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button type="button" id="btn-hub">Foundation</button>
+      <button type="button" id="btn-spitend">Fly to Spitend</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button type="button" id="btn-reset" class="secondary">Reset camera</button>
+      <button type="button" id="btn-tips" class="secondary">Visit tips</button>
+    </div>
+
+    <div id="legend">
+      <h2>Legend</h2>
+      <div class="legend-item"><span class="swatch" style="background:#7a9a6a"></span>Grazing marsh (reserve)</div>
+      <div class="legend-item"><span class="swatch" style="background:#c8d080"></span>Salt marshes</div>
+      <div class="legend-item"><span class="swatch" style="background:#8aabba"></span>The Swale</div>
+      <div class="legend-item"><span class="swatch" style="background:#2a6a72"></span>Creeks / ditches</div>
+      <div class="legend-item"><span class="swatch line" style="background:#e04a3a"></span>Reserve footpath</div>
+      <div class="legend-item"><span class="swatch line" style="background:#c05040;opacity:0.85"></span>Coastal footpath (dashed)</div>
+      <div class="legend-item"><span class="swatch dash"></span>Vehicle access</div>
+      <div class="legend-item"><span class="swatch" style="background:#c43a2a;border-radius:50%"></span>Bird hides 1–4</div>
+      <div class="legend-item"><span class="swatch circle"></span>Viewing screen / open air</div>
+    </div>
+  </div>
+
+  <div id="scale-bar">
+    <div>Approx scale — 1 km</div>
+    <div class="bar"></div>
+    <div class="labels"><span>0</span><span>1 km</span></div>
+  </div>
+  <div id="hint">Drag to orbit · Pinch/scroll zoom · Two-finger / right-drag pan · Tap markers</div>
+
+  <div id="info-card" role="dialog" aria-modal="true" aria-labelledby="info-title">
+    <button type="button" id="info-close" aria-label="Close">×</button>
+    <h3 id="info-title"></h3>
+    <div class="meta" id="info-meta"></div>
+    <div class="body" id="info-body"></div>
+    <div class="dist" id="info-dist" style="display:none"></div>
+    <div class="card-actions">
+      <button type="button" id="info-fly">Fly to</button>
+      <button type="button" id="info-close-btn" class="secondary">Close</button>
+    </div>
+  </div>
+
+  <div id="tips-drawer" role="dialog" aria-modal="true" aria-labelledby="tips-title">
+    <button type="button" id="tips-close" aria-label="Close">×</button>
+    <h3 id="tips-title">Visit tips</h3>
+    <ul>
+      <li><strong>Pre-book online only</strong> — day tickets are limited. Check <a href="https://www.elmleynaturereserve.co.uk" target="_blank" rel="noopener">elmleynaturereserve.co.uk</a> before travelling.</li>
+      <li><strong>Address:</strong> Kingshill Farm, Isle of Sheppey, Kent ME12 3RN / ME12 3RW · What3Words <em>mystified.topping.pricing</em> · ~40 miles from London.</li>
+      <li><strong>Entry track (~2 miles):</strong> stay in your car and use it as a hide — do not get out on the drive.</li>
+      <li><strong>Walk only marked trails.</strong> No dogs except registered assistance dogs.</li>
+      <li><strong>Typical hours</strong> (always check website): Oct–late May 9–5; late May–end Sep 9–4; summer Sundays 11–6.</li>
+      <li><strong>Four hides</strong> (no booking): Well Marsh, Counterwall, South Fleet, Spitend (~5.5 km from farm — take a picnic).</li>
+      <li><strong>Facilities:</strong> visitor car park, Kings Hill Farm, Linhay (tea/cake; binocular hire ~£5/day), picnic benches past the car park. Barn/accommodation for overnight guests only.</li>
+      <li><strong>Wildlife:</strong> Lapwing, Pied Avocet, Redshank, Marsh Harrier, Barn &amp; Little Owl, Brown Hare, Egrets; winter wildfowl; spring/autumn waders.</li>
+      <li><strong>History:</strong> Philip &amp; Corinne Merricks restored nature over 40+ years; Gareth &amp; Georgina Fulton continue — only family-owned NNR in the UK (~1,212 ha / 3,300 acres).</li>
+    </ul>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+'use strict';
+
+if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
+  var banner = document.getElementById('fallback-banner');
+  if (banner) banner.classList.add('show');
+  return;
+}
+
+// ─── Scale: 1 unit = 100 m ───
+// Origin near Visitor Car Park. +X east, +Y up, +Z north.
+
+var POIS = {
+  entrance: {
+    id: 'entrance', name: 'Entrance Gate', kind: 'access',
+    pos: [-3, 0, 22],
+    meta: 'Sheppey Way · ticket check',
+    body: 'Arrive at the Elmley Entrance Gate on Sheppey Way. The gate is staffed; wardens confirm your pre-booked ticket and vehicle details from a safe distance. From here a ~2 mile vehicle track leads south to the visitor car park — stay in your car and use it as a hide.',
+    walkKm: null
+  },
+  hub: {
+    id: 'hub', name: 'Visitor Car Park & Facilities', kind: 'hub',
+    pos: [0, 0, 4],
+    meta: 'Central hub · Kingshill Farm',
+    body: 'Main day-visitor parking and facilities hub. Picnic benches are past the car park. The Linhay offers tea/cake and binocular hire (~£5/day). Barn and accommodation areas are for overnight guests only. Start of the marked reserve footpaths to the hides and Swale viewing screen.',
+    walkKm: 0
+  },
+  farm: {
+    id: 'farm', name: 'Kings Hill Farm', kind: 'building',
+    pos: [2.2, 0, 4.2],
+    meta: 'Working farm + conservation',
+    body: 'Heart of the family-owned National Nature Reserve. Philip & Corinne Merricks restored nature here over 40+ years; Gareth & Georgina Fulton continue that work. Working farm alongside freshwater grazing marsh, salt marsh and mudflats (~1,212 ha / 3,300 acres).',
+    walkKm: 0.2
+  },
+  school: {
+    id: 'school', name: 'Old School House', kind: 'building',
+    pos: [-3.2, 0, 3.5],
+    meta: 'Short walk west of the car park',
+    body: 'Historic building just west of the visitor hub, linked by a short path and tree line. Part of the characterful farmstead landscape visitors pass on the Old School House walk.',
+    walkKm: 0.4
+  },
+  brickworks: {
+    id: 'brickworks', name: 'Old Brickworks & Village', kind: 'building',
+    pos: [-11, 0, 2],
+    meta: 'Western coastal edge',
+    body: 'Remains of the old brickworks and village near the western coastal edge of the peninsula, close to salt marsh and the English Coastal Path.',
+    walkKm: 1.3
+  },
+  rose: {
+    id: 'rose', name: 'Rose Cottage', kind: 'building',
+    pos: [3.5, 0, 12],
+    meta: 'Centre-north of the marsh',
+    body: 'Isolated cottage in the northern grazing marsh, visible across the open landscape north of the visitor hub.',
+    walkKm: 1.0
+  },
+  cods: {
+    id: 'cods', name: "Cod's House", kind: 'building',
+    pos: [16, 0, 5.5],
+    meta: 'Eastern side of the reserve',
+    body: "Named house on the eastern side of the reserve, between the central farmstead area and the far eastern tip toward Spitend.",
+    walkKm: 1.8
+  },
+  screen: {
+    id: 'screen', name: 'Swale Viewing Screen', kind: 'viewpoint',
+    pos: [0.5, 0, -3.5],
+    meta: 'Short walk south · Cockleshell Beach area',
+    body: 'Open-air viewing screen on the southern edge overlooking The Swale. Special at high tide. Nearby private beach / Cockleshell Beach area is closed autumn–spring for migratory birds — always follow on-site notices.',
+    walkKm: 0.8
+  },
+  bluebadge: {
+    id: 'bluebadge', name: 'Blue Badge Car Park', kind: 'access',
+    pos: [4.2, 0, -0.2],
+    meta: 'At Well Marsh Hide',
+    body: 'Blue badge holders car park next to Well Marsh Hide — the closest hide to the visitor centre.',
+    walkKm: 0.6
+  },
+  hide1: {
+    id: 'hide1', name: '1 · Well Marsh Hide', kind: 'hide',
+    pos: [5, 0, -1.2],
+    meta: 'Closest hide · no booking',
+    body: 'First bird hide on the trail, south of the visitor centre. Ideal first stop for a short walk. Look for waders, wildfowl and Marsh Harriers over the marsh.',
+    walkKm: 0.7
+  },
+  hide2: {
+    id: 'hide2', name: '2 · Counterwall Hide', kind: 'hide',
+    pos: [11, 0, 2.5],
+    meta: 'NE of Well Marsh · no booking',
+    body: 'Second hide, north-east of Well Marsh along the reserve footpath, beside raised counterwalls / seawalls typical of this grazing marsh.',
+    walkKm: 1.4
+  },
+  hide3: {
+    id: 'hide3', name: '3 · South Fleet Hide', kind: 'hide',
+    pos: [17, 0, -2.2],
+    meta: 'Southern loop · no booking',
+    body: 'Third hide on the southern path loop, with views across fleet water and salt marsh toward The Swale.',
+    walkKm: 2.2
+  },
+  hide4: {
+    id: 'hide4', name: '4 · Spitend Hide', kind: 'hide',
+    pos: [52, 0, 0.5],
+    meta: 'Furthest east · ~5.5 km from farm',
+    body: 'Furthest hide at the eastern tip of the peninsula — about 5.5 km from the farm. Picnic recommended. Superb for migratory waders and expansive Swale views.',
+    walkKm: 5.5
+  }
+};
+
+var WILDLIFE = [
+  { id: 'w1', name: 'Marsh Harrier roost area', pos: [8, 0, 1], body: 'Elmley has historically claimed one of Europe\'s largest wintering Marsh Harrier roosts. Watch over reed and marsh edges, especially late afternoon in winter.' },
+  { id: 'w2', name: 'Lapwing & wader pools', pos: [6, 0, -2.5], body: 'Freshwater grazing marsh and muddy edges favour Lapwing, Redshank and Pied Avocet. Spring and autumn passage bring migratory waders.' },
+  { id: 'w3', name: 'Owl country', pos: [2, 0, 8], body: 'Barn Owl and Little Owl hunt over rough grassland and farm edges — dusk and dawn are often best.' },
+  { id: 'w4', name: 'Brown Hare fields', pos: [0, 0, 14], body: 'Open fields along the entry landscape are good for Brown Hare — stay in your car on the entry track for the best views.' },
+  { id: 'w5', name: 'Egret & wildfowl', pos: [20, 0, -1], body: 'Winter wildfowl gather on fleets and The Swale. Egrets are regular along creeks and salt marsh.' }
+];
+
+// ─── Scene ───
+var scene = new THREE.Scene();
+scene.background = new THREE.Color(0xb8c8d0);
+scene.fog = new THREE.Fog(0xb8c8d0, 55, 130);
+
+var camera = new THREE.PerspectiveCamera(48, 1, 0.1, 300);
+var renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = false;
+
+var wrap = document.getElementById('canvas-wrap');
+wrap.appendChild(renderer.domElement);
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 3;
+controls.maxDistance = 120;
+controls.maxPolarAngle = Math.PI * 0.48;
+controls.screenSpacePanning = true;
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+var amb = new THREE.AmbientLight(0xd0e0d8, 0.55);
+scene.add(amb);
+var hemi = new THREE.HemisphereLight(0xc8dce8, 0x5a7050, 0.45);
+scene.add(hemi);
+var dir = new THREE.DirectionalLight(0xfff4e0, 0.85);
+dir.position.set(-20, 40, 25);
+scene.add(dir);
+var fill = new THREE.DirectionalLight(0x90a8b8, 0.25);
+fill.position.set(30, 20, -10);
+scene.add(fill);
+
+// Groups for layers
+var gLand = new THREE.Group(); gLand.name = 'land';
+var gSalt = new THREE.Group(); gSalt.name = 'salt';
+var gWater = new THREE.Group(); gWater.name = 'swale';
+var gCreeks = new THREE.Group(); gCreeks.name = 'creeks';
+var gPaths = new THREE.Group(); gPaths.name = 'paths';
+var gBuildings = new THREE.Group(); gBuildings.name = 'buildings';
+var gHides = new THREE.Group(); gHides.name = 'hides';
+var gWildlife = new THREE.Group(); gWildlife.name = 'wildlife';
+var gMarkers = new THREE.Group(); gMarkers.name = 'markers';
+var gBirds = new THREE.Group(); gBirds.name = 'birds';
+var gExtras = new THREE.Group(); gExtras.name = 'extras';
+
+scene.add(gWater);
+scene.add(gLand);
+scene.add(gSalt);
+scene.add(gCreeks);
+scene.add(gPaths);
+scene.add(gBuildings);
+scene.add(gHides);
+scene.add(gWildlife);
+scene.add(gMarkers);
+scene.add(gBirds);
+scene.add(gExtras);
+
+// Materials
+var matLand = new THREE.MeshStandardMaterial({ color: 0x7a9a6a, roughness: 0.4, metalness: 0.0, flatShading: false });
+var matSalt = new THREE.MeshStandardMaterial({ color: 0xc8d080, roughness: 0.55, metalness: 0.0 });
+var matMud = new THREE.MeshStandardMaterial({ color: 0x9a8a6a, roughness: 0.7, metalness: 0.0 });
+var matSeawall = new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 0.5, metalness: 0.0 });
+var matPath = new THREE.MeshStandardMaterial({ color: 0xe04a3a, roughness: 0.45, metalness: 0.05 });
+var matCoastPath = new THREE.MeshStandardMaterial({ color: 0xc05040, roughness: 0.5, metalness: 0.05 });
+var matTrack = new THREE.MeshStandardMaterial({ color: 0xe8e4d8, roughness: 0.55, metalness: 0.0 });
+var matBuilding = new THREE.MeshStandardMaterial({ color: 0xd4c4a0, roughness: 0.55, metalness: 0.05 });
+var matRoof = new THREE.MeshStandardMaterial({ color: 0x7a6048, roughness: 0.6, metalness: 0.1 });
+var matWood = new THREE.MeshStandardMaterial({ color: 0x8a6a40, roughness: 0.55, metalness: 0.05 });
+var matHideDark = new THREE.MeshStandardMaterial({ color: 0x5a4030, roughness: 0.6, metalness: 0.05 });
+var matCreek = new THREE.MeshStandardMaterial({
+  color: 0x2a6a72, roughness: 0.25, metalness: 0.15,
+  transparent: true, opacity: 0.92
+});
+
+// Animated water material (simple colour + slight emissive pulse via code)
+var matSwale = new THREE.MeshStandardMaterial({
+  color: 0x8aabba, roughness: 0.2, metalness: 0.15,
+  transparent: true, opacity: 0.92
+});
+
+function shapeFromPoints(pts) {
+  var s = new THREE.Shape();
+  s.moveTo(pts[0][0], pts[0][1]);
+  for (var i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+  s.closePath();
+  return s;
+}
+
+function meshFromShapeXZ(shape, y, mat, depth) {
+  depth = depth || 0.08;
+  var geo = new THREE.ExtrudeGeometry(shape, { depth: depth, bevelEnabled: false });
+  // ExtrudeGeometry: shape in XY, extruded +Z → rotate to XZ ground
+  geo.rotateX(-Math.PI / 2);
+  var mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = y;
+  return mesh;
+}
+
+function ribbon(points, width, y, mat, dashed) {
+  // points: array of [x,z]; build a flat strip along path
+  var group = new THREE.Group();
+  if (points.length < 2) return group;
+  for (var i = 0; i < points.length - 1; i++) {
+    if (dashed && (i % 2 === 1)) continue;
+    var a = points[i], b = points[i + 1];
+    var dx = b[0] - a[0], dz = b[1] - a[1];
+    var len = Math.sqrt(dx * dx + dz * dz);
+    if (len < 0.01) continue;
+    var geo = new THREE.BoxGeometry(width, 0.06, len);
+    var mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set((a[0] + b[0]) / 2, y, (a[1] + b[1]) / 2);
+    mesh.rotation.y = Math.atan2(dx, dz);
+    group.add(mesh);
+  }
+  return group;
+}
+
+function tubeCreek(points, radius) {
+  var vecs = [];
+  for (var i = 0; i < points.length; i++) {
+    vecs.push(new THREE.Vector3(points[i][0], -0.05, points[i][1]));
+  }
+  var curve = new THREE.CatmullRomCurve3(vecs);
+  var geo = new THREE.TubeGeometry(curve, Math.max(12, points.length * 4), radius, 6, false);
+  return new THREE.Mesh(geo, matCreek);
+}
+
+function makeBuilding(x, z, w, d, h, name) {
+  var g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.userData.poiId = name;
+  var body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), matBuilding);
+  body.position.y = h / 2;
+  g.add(body);
+  // pitched roof
+  var roofGeo = new THREE.ConeGeometry(Math.max(w, d) * 0.72, h * 0.45, 4);
+  var roof = new THREE.Mesh(roofGeo, matRoof);
+  roof.position.y = h + h * 0.2;
+  roof.rotation.y = Math.PI / 4;
+  g.add(roof);
+  return g;
+}
+
+function makeHide(x, z, num) {
+  var g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.userData.poiId = 'hide' + num;
+  var base = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.35, 0.4), matWood);
+  base.position.y = 0.18;
+  g.add(base);
+  var roof = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.06, 0.5), matHideDark);
+  roof.position.y = 0.4;
+  g.add(roof);
+  // viewing slit
+  var slit = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 0.08, 0.06),
+    new THREE.MeshStandardMaterial({ color: 0x1a1008, roughness: 0.8 })
+  );
+  slit.position.set(0, 0.28, 0.18);
+  g.add(slit);
+  // numbered marker pole
+  var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8), matPath);
+  pole.position.set(0.35, 0.35, 0);
+  g.add(pole);
+  var ball = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshStandardMaterial({ color: 0xc43a2a, roughness: 0.4 }));
+  ball.position.set(0.35, 0.75, 0);
+  ball.userData.poiId = 'hide' + num;
+  ball.userData.clickable = true;
+  g.add(ball);
+  return g;
+}
+
+function makeMarker(poi, color, radius) {
+  var g = new THREE.Group();
+  g.position.set(poi.pos[0], 0, poi.pos[2]);
+  g.userData.poiId = poi.id;
+  var stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 0.85, 8),
+    new THREE.MeshStandardMaterial({ color: color, roughness: 0.45 })
+  );
+  stem.position.y = 0.42;
+  g.add(stem);
+  var head = new THREE.Mesh(
+    new THREE.SphereGeometry(radius || 0.18, 14, 14),
+    new THREE.MeshStandardMaterial({ color: color, roughness: 0.35, emissive: color, emissiveIntensity: 0.15 })
+  );
+  head.position.y = 0.95;
+  head.userData.poiId = poi.id;
+  head.userData.clickable = true;
+  g.add(head);
+  // hit target (larger invisible)
+  var hit = new THREE.Mesh(
+    new THREE.SphereGeometry(0.55, 8, 8),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
+  hit.position.y = 0.7;
+  hit.userData.poiId = poi.id;
+  hit.userData.clickable = true;
+  g.add(hit);
+  return g;
+}
+
+// ─── Terrain: land outline (approx from map; X east, Z north) ───
+var landPts = [
+  [-16, 8], [-14, 18], [-10, 24], [-4, 26], [2, 25], [6, 22],
+  [10, 18], [14, 14], [20, 12], [28, 10], [36, 8], [44, 6],
+  [50, 4], [54, 2], [56, 0], [55, -2], [52, -4], [46, -5],
+  [38, -6], [30, -7], [22, -8], [14, -9], [8, -8], [2, -7],
+  [-4, -6], [-10, -4], [-14, 0], [-16, 4]
+];
+var landShape = shapeFromPoints(landPts);
+var landMesh = meshFromShapeXZ(landShape, -0.02, matLand, 0.12);
+gLand.add(landMesh);
+
+// Slight raised seawalls / counterwalls
+var wallA = ribbon([[4, -0.5], [10, 0.5], [14, 2], [18, 1]], 0.35, 0.12, matSeawall, false);
+gLand.add(wallA);
+var wallB = ribbon([[8, -3], [14, -2.5], [20, -2], [26, -1]], 0.3, 0.1, matSeawall, false);
+gLand.add(wallB);
+
+// Salt marsh bands along southern / western coasts
+var saltBands = [
+  [[-14, 2], [-12, -2], [-8, -4], [-4, -5.5], [0, -6.5], [4, -7.5], [8, -8], [12, -8.5], [12, -6.5], [8, -6], [4, -5.5], [0, -4.5], [-4, -3.5], [-8, -2], [-12, 1], [-14, 2]],
+  [[18, -7], [24, -6.5], [32, -5.5], [40, -4.5], [48, -3], [52, -2], [52, -0.5], [48, -1.5], [40, -2.5], [32, -3.5], [24, -4.5], [18, -5], [18, -7]],
+  [[-15, 6], [-14, 12], [-12, 16], [-8, 14], [-10, 10], [-12, 6], [-15, 6]]
+];
+for (var si = 0; si < saltBands.length; si++) {
+  try {
+    var ss = shapeFromPoints(saltBands[si]);
+    var sm = meshFromShapeXZ(ss, 0.01, matSalt, 0.05);
+    gSalt.add(sm);
+  } catch (e) {}
+}
+
+// The Swale water plane (large)
+var swaleGeo = new THREE.PlaneGeometry(140, 100, 40, 30);
+swaleGeo.rotateX(-Math.PI / 2);
+// gentle vertex ripple stored for animation
+var swalePos = swaleGeo.attributes.position;
+var swaleBase = new Float32Array(swalePos.count);
+for (var wi = 0; wi < swalePos.count; wi++) swaleBase[wi] = swalePos.getY(wi);
+var swaleMesh = new THREE.Mesh(swaleGeo, matSwale);
+swaleMesh.position.set(15, -0.35, 0);
+swaleMesh.userData.baseY = swaleBase;
+gWater.add(swaleMesh);
+
+// Mudflats / sandbanks in The Swale
+var mudShapes = [
+  [[2, -10], [8, -11], [14, -10.5], [12, -9], [6, -8.5], [2, -9]],
+  [[22, -9], [30, -8.5], [36, -7.5], [34, -6.5], [26, -7], [22, -8]],
+  [[-8, -7], [-2, -8], [2, -7.5], [0, -6.5], [-6, -6]]
+];
+for (var mi = 0; mi < mudShapes.length; mi++) {
+  var mud = meshFromShapeXZ(shapeFromPoints(mudShapes[mi]), -0.22, matMud, 0.06);
+  gWater.add(mud);
+}
+
+// Distant NW hint: A249 Sheppey Crossing
+var bridge = new THREE.Group();
+bridge.position.set(-22, 0, 28);
+var deck = new THREE.Mesh(new THREE.BoxGeometry(8, 0.15, 0.6), new THREE.MeshStandardMaterial({ color: 0x6a6a68, roughness: 0.5 }));
+deck.position.y = 0.8;
+bridge.add(deck);
+for (var pi = -3; pi <= 3; pi++) {
+  var pylon = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), new THREE.MeshStandardMaterial({ color: 0x555552 }));
+  pylon.position.set(pi * 1.1, 0.4, 0);
+  bridge.add(pylon);
+}
+var roadNW = ribbon([[-26, 30], [-18, 28], [-12, 26], [-6, 24], [-3, 22]], 0.45, 0.05, new THREE.MeshStandardMaterial({ color: 0x5a5a58, roughness: 0.6 }), false);
+gExtras.add(bridge);
+gExtras.add(roadNW);
+// Sheppey Way label marker only via CSS later
+
+// Creeks / ditches (dark teal winding)
+var creekPaths = [
+  [[-6, 6], [-2, 4], [2, 2], [5, 0], [7, -2], [9, -4]],
+  [[2, 8], [5, 6], [8, 4], [10, 2], [12, 0], [14, -2]],
+  [[10, 8], [14, 6], [18, 4], [22, 2], [26, 1], [30, 0]],
+  [[16, -4], [20, -3], [24, -2], [28, -1], [34, 0], [40, 1]],
+  [[-10, 4], [-8, 2], [-6, 0], [-4, -2], [-2, -4]],
+  [[36, 4], [40, 3], [44, 2], [48, 1], [51, 0]],
+  [[6, 10], [8, 8], [10, 6], [11, 4]],
+  [[0, 16], [2, 12], [3, 9], [4, 6]]
+];
+for (var ci = 0; ci < creekPaths.length; ci++) {
+  gCreeks.add(tubeCreek(creekPaths[ci], 0.12 + (ci % 3) * 0.03));
+}
+
+// Vehicle access (white dashed) entrance → car park
+var vehiclePts = [
+  [-3, 22], [-2.5, 18], [-1.5, 14], [-0.5, 10], [0, 7], [0, 4]
+];
+gPaths.add(ribbon(vehiclePts, 0.28, 0.08, matTrack, true));
+
+// Reserve footpaths (solid red)
+var pathMain = [
+  [0, 4], [1.5, 2], [3, 0.5], [5, -1.2], [8, -0.5], [11, 2.5],
+  [14, 1], [17, -2.2], [22, -1], [28, 0], [36, 0.5], [44, 0.8], [52, 0.5]
+];
+var pathSouth = [
+  [0, 4], [0.2, 1], [0.5, -1.5], [0.5, -3.5]
+];
+var pathSchool = [
+  [0, 4], [-1.5, 3.8], [-3.2, 3.5]
+];
+var pathLoop = [
+  [5, -1.2], [8, -3], [12, -3.5], [17, -2.2]
+];
+gPaths.add(ribbon(pathMain, 0.18, 0.09, matPath, false));
+gPaths.add(ribbon(pathSouth, 0.16, 0.09, matPath, false));
+gPaths.add(ribbon(pathSchool, 0.14, 0.09, matPath, false));
+gPaths.add(ribbon(pathLoop, 0.14, 0.09, matPath, false));
+
+// Coastal footpaths (dashed red)
+var coastW = [
+  [-12, 16], [-14, 10], [-15, 4], [-13, -1], [-10, -3], [-6, -5]
+];
+var coastE = [
+  [48, 3], [52, 1], [54, -1], [52, -3], [48, -4]
+];
+gPaths.add(ribbon(coastW, 0.12, 0.1, matCoastPath, true));
+gPaths.add(ribbon(coastE, 0.12, 0.1, matCoastPath, true));
+
+// English Coastal Path entry markers (small posts)
+function coastalEntry(x, z) {
+  var m = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.08, 0.08, 0.5, 8),
+    new THREE.MeshStandardMaterial({ color: 0x2a6a4a, roughness: 0.5 })
+  );
+  m.position.set(x, 0.25, z);
+  return m;
+}
+gPaths.add(coastalEntry(-12, 16));
+gPaths.add(coastalEntry(52, -3));
+
+// Buildings
+gBuildings.add(makeBuilding(POIS.farm.pos[0], POIS.farm.pos[2], 0.9, 0.7, 0.45, 'farm'));
+gBuildings.add(makeBuilding(POIS.school.pos[0], POIS.school.pos[2], 0.7, 0.55, 0.4, 'school'));
+gBuildings.add(makeBuilding(POIS.brickworks.pos[0], POIS.brickworks.pos[2], 1.0, 0.8, 0.35, 'brickworks'));
+gBuildings.add(makeBuilding(POIS.rose.pos[0], POIS.rose.pos[2], 0.55, 0.45, 0.35, 'rose'));
+gBuildings.add(makeBuilding(POIS.cods.pos[0], POIS.cods.pos[2], 0.6, 0.5, 0.38, 'cods'));
+
+// Car park pad
+var carpark = new THREE.Mesh(
+  new THREE.BoxGeometry(1.8, 0.04, 1.2),
+  new THREE.MeshStandardMaterial({ color: 0xc8c4b8, roughness: 0.7 })
+);
+carpark.position.set(0, 0.04, 4);
+gBuildings.add(carpark);
+// small facility shed
+gBuildings.add(makeBuilding(-0.8, 4.6, 0.4, 0.35, 0.28, 'hub'));
+
+// Hides
+gHides.add(makeHide(POIS.hide1.pos[0], POIS.hide1.pos[2], 1));
+gHides.add(makeHide(POIS.hide2.pos[0], POIS.hide2.pos[2], 2));
+gHides.add(makeHide(POIS.hide3.pos[0], POIS.hide3.pos[2], 3));
+gHides.add(makeHide(POIS.hide4.pos[0], POIS.hide4.pos[2], 4));
+
+// Viewing screen (blue ring style)
+var screenG = new THREE.Group();
+screenG.position.set(POIS.screen.pos[0], 0, POIS.screen.pos[2]);
+var screenWall = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.35, 0.08), new THREE.MeshStandardMaterial({ color: 0x4a6a7a, roughness: 0.5 }));
+screenWall.position.y = 0.2;
+screenG.add(screenWall);
+var screenRing = new THREE.Mesh(
+  new THREE.TorusGeometry(0.25, 0.04, 8, 24),
+  new THREE.MeshStandardMaterial({ color: 0x4a90c8, roughness: 0.4 })
+);
+screenRing.rotation.x = Math.PI / 2;
+screenRing.position.y = 0.55;
+screenRing.userData.poiId = 'screen';
+screenRing.userData.clickable = true;
+screenG.add(screenRing);
+gHides.add(screenG);
+
+// Clickable POI markers
+var markerColors = {
+  access: 0xc43a2a,
+  hub: 0xffffff,
+  building: 0xd4a84a,
+  viewpoint: 0x4a90c8,
+  hide: 0xc43a2a
+};
+Object.keys(POIS).forEach(function (key) {
+  var p = POIS[key];
+  if (key.indexOf('hide') === 0) return; // hide has its own marker
+  var col = markerColors[p.kind] || 0xd4a84a;
+  var m = makeMarker(p, col, p.kind === 'hub' ? 0.22 : 0.16);
+  gMarkers.add(m);
+});
+// blue badge
+var bb = makeMarker(POIS.bluebadge, 0x2a5a9a, 0.14);
+gMarkers.add(bb);
+
+// Wildlife markers (teardrop / bird-ish posts)
+WILDLIFE.forEach(function (w) {
+  var g = new THREE.Group();
+  g.position.set(w.pos[0], 0, w.pos[2]);
+  g.userData.wildlifeId = w.id;
+  var cone = new THREE.Mesh(
+    new THREE.ConeGeometry(0.14, 0.35, 8),
+    new THREE.MeshStandardMaterial({ color: 0x3a8a5a, roughness: 0.4, emissive: 0x1a4a2a, emissiveIntensity: 0.2 })
+  );
+  cone.position.y = 0.55;
+  cone.userData.wildlifeId = w.id;
+  cone.userData.clickable = true;
+  g.add(cone);
+  var hit = new THREE.Mesh(new THREE.SphereGeometry(0.45, 8, 8), new THREE.MeshBasicMaterial({ visible: false }));
+  hit.position.y = 0.5;
+  hit.userData.wildlifeId = w.id;
+  hit.userData.clickable = true;
+  g.add(hit);
+  gWildlife.add(g);
+});
+
+// Simple flock near hides (instanced small triangles)
+(function () {
+  var birdGeo = new THREE.ConeGeometry(0.08, 0.2, 3);
+  birdGeo.rotateX(Math.PI / 2);
+  var birdMat = new THREE.MeshStandardMaterial({ color: 0x2a2a28, roughness: 0.6 });
+  var count = 24;
+  var mesh = new THREE.InstancedMesh(birdGeo, birdMat, count);
+  var dummy = new THREE.Object3D();
+  var flockData = [];
+  for (var i = 0; i < count; i++) {
+    var cx = 6 + Math.random() * 14;
+    var cz = -3 + Math.random() * 6;
+    flockData.push({
+      x: cx, z: cz, y: 0.8 + Math.random() * 1.2,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.4 + Math.random() * 0.6,
+      radius: 0.8 + Math.random() * 1.5
+    });
+  }
+  mesh.userData.flock = flockData;
+  gBirds.add(mesh);
+  gBirds.userData.mesh = mesh;
+  gBirds.userData.dummy = dummy;
+})();
+
+// Approx 1 km scale bar reference on ground (near hub)
+var scaleRef = ribbon([[-2, -5.5], [8, -5.5]], 0.08, 0.07, new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5 }), false);
+gExtras.add(scaleRef);
+
+// ─── CSS labels ───
+var labelOverlay = document.getElementById('label-overlay');
+var cssLabels = [];
+
+function addLabel(text, x, y, z, cls) {
+  var el = document.createElement('div');
+  el.className = 'css-label' + (cls ? ' ' + cls : '');
+  el.textContent = text;
+  labelOverlay.appendChild(el);
+  cssLabels.push({ el: el, pos: new THREE.Vector3(x, y, z) });
+}
+
+addLabel('Entrance Gate', -3, 1.2, 22);
+addLabel('Visitor Car Park', 0, 1.2, 4);
+addLabel('Kings Hill Farm', 2.2, 1.1, 4.2);
+addLabel('Old School House', -3.2, 1.0, 3.5);
+addLabel('Old Brickworks', -11, 1.0, 2);
+addLabel('Rose Cottage', 3.5, 1.0, 12);
+addLabel("Cod's House", 16, 1.0, 5.5);
+addLabel('Swale Screen', 0.5, 1.0, -3.5);
+addLabel('1', 5.35, 0.9, -1.2, 'hide-num');
+addLabel('2', 11.35, 0.9, 2.5, 'hide-num');
+addLabel('3', 17.35, 0.9, -2.2, 'hide-num');
+addLabel('4', 52.35, 0.9, 0.5, 'hide-num');
+addLabel('The Swale', 10, 0.3, -12);
+addLabel('A249 Sheppey Crossing', -22, 1.5, 28);
+addLabel('Spitend', 52, 1.2, 0.5);
+
+var labelsVisible = true;
+
+function updateLabels() {
+  var w = wrap.clientWidth, h = wrap.clientHeight;
+  for (var i = 0; i < cssLabels.length; i++) {
+    var L = cssLabels[i];
+    if (!labelsVisible) { L.el.style.display = 'none'; continue; }
+    var v = L.pos.clone().project(camera);
+    if (v.z > 1) { L.el.style.display = 'none'; continue; }
+    var sx = (v.x * 0.5 + 0.5) * w;
+    var sy = (-v.y * 0.5 + 0.5) * h;
+    if (sx < -40 || sy < -40 || sx > w + 40 || sy > h + 40) {
+      L.el.style.display = 'none';
+    } else {
+      L.el.style.display = 'block';
+      L.el.style.left = sx + 'px';
+      L.el.style.top = sy + 'px';
+    }
+  }
+}
+
+// ─── Camera presets ───
+var camAnim = null;
+
+function flyTo(targetPos, camPos, duration) {
+  duration = duration || 1400;
+  var startCam = camera.position.clone();
+  var startTarget = controls.target.clone();
+  var endCam = new THREE.Vector3(camPos[0], camPos[1], camPos[2]);
+  var endTarget = new THREE.Vector3(targetPos[0], targetPos[1], targetPos[2]);
+  var t0 = performance.now();
+  camAnim = function (now) {
+    var t = Math.min(1, (now - t0) / duration);
+    var e = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // ease
+    camera.position.lerpVectors(startCam, endCam, e);
+    controls.target.lerpVectors(startTarget, endTarget, e);
+    controls.update();
+    if (t >= 1) camAnim = null;
+  };
+}
+
+function setPreset(name) {
+  document.querySelectorAll('#btn-overview,#btn-walk,#btn-hub,#btn-spitend').forEach(function (b) {
+    b.classList.remove('active');
+  });
+  if (name === 'overview') {
+    document.getElementById('btn-overview').classList.add('active');
+    flyTo([18, 0, 2], [18, 42, -28], 1500);
+  } else if (name === 'walk') {
+    document.getElementById('btn-walk').classList.add('active');
+    flyTo([12, 0, 0], [8, 8, -10], 1400);
+  } else if (name === 'hub') {
+    document.getElementById('btn-hub').classList.add('active');
+    flyTo([0, 0, 4], [-2, 6, -2], 1200);
+  } else if (name === 'spitend') {
+    document.getElementById('btn-spitend').classList.add('active');
+    flyTo([52, 0, 0.5], [48, 10, -8], 1800);
+  } else if (name === 'reset') {
+    document.getElementById('btn-overview').classList.add('active');
+    // Start: overlooking visitor centre looking SE toward hides
+    flyTo([8, 0, 0], [-4, 12, -6], 1200);
+  }
+}
+
+// Initial camera: overlooking visitor centre looking SE toward hides
+camera.position.set(-4, 12, -6);
+controls.target.set(8, 0, 0);
+controls.update();
+
+// ─── Interaction ───
+var raycaster = new THREE.Raycaster();
+var pointer = new THREE.Vector2();
+var selectedPoi = null;
+
+function openInfo(poi, isWildlife) {
+  selectedPoi = poi;
+  var card = document.getElementById('info-card');
+  document.getElementById('tips-drawer').classList.remove('open');
+  document.getElementById('info-title').textContent = poi.name;
+  document.getElementById('info-meta').textContent = poi.meta || (isWildlife ? 'Wildlife highlight' : '');
+  document.getElementById('info-body').textContent = poi.body;
+  var distEl = document.getElementById('info-dist');
+  if (typeof poi.walkKm === 'number') {
+    distEl.style.display = 'block';
+    if (poi.walkKm === 0) {
+      distEl.innerHTML = '<strong>You are at the visitor hub</strong> — start of walking trails.';
+    } else {
+      distEl.innerHTML = 'Approx walking distance from <strong>Visitor Car Park</strong>: <strong>' + poi.walkKm + ' km</strong>' +
+        (poi.walkKm >= 5 ? ' (picnic recommended)' : '');
+    }
+  } else {
+    distEl.style.display = 'none';
+  }
+  card.classList.add('open');
+}
+
+function closeInfo() {
+  document.getElementById('info-card').classList.remove('open');
+  selectedPoi = null;
+}
+
+function pick(clientX, clientY) {
+  var rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  var objs = [];
+  gMarkers.traverse(function (o) { if (o.userData.clickable) objs.push(o); });
+  gHides.traverse(function (o) { if (o.userData.clickable) objs.push(o); });
+  if (gWildlife.visible) gWildlife.traverse(function (o) { if (o.userData.clickable) objs.push(o); });
+  var hits = raycaster.intersectObjects(objs, false);
+  if (!hits.length) return;
+  var ud = hits[0].object.userData;
+  if (ud.poiId && POIS[ud.poiId]) openInfo(POIS[ud.poiId], false);
+  else if (ud.wildlifeId) {
+    for (var i = 0; i < WILDLIFE.length; i++) {
+      if (WILDLIFE[i].id === ud.wildlifeId) {
+        openInfo({ name: WILDLIFE[i].name, meta: 'Wildlife highlight', body: WILDLIFE[i].body, pos: WILDLIFE[i].pos, walkKm: null }, true);
+        break;
+      }
+    }
+  }
+}
+
+var pointerDown = null;
+renderer.domElement.addEventListener('pointerdown', function (e) {
+  pointerDown = { x: e.clientX, y: e.clientY, t: Date.now() };
+});
+renderer.domElement.addEventListener('pointerup', function (e) {
+  if (!pointerDown) return;
+  var dx = e.clientX - pointerDown.x, dy = e.clientY - pointerDown.y;
+  var dt = Date.now() - pointerDown.t;
+  pointerDown = null;
+  if (dt < 400 && dx * dx + dy * dy < 100) pick(e.clientX, e.clientY);
+});
+
+document.getElementById('info-close').addEventListener('click', closeInfo);
+document.getElementById('info-close-btn').addEventListener('click', closeInfo);
+document.getElementById('info-fly').addEventListener('click', function () {
+  if (!selectedPoi || !selectedPoi.pos) return;
+  var p = selectedPoi.pos;
+  flyTo([p[0], 0, p[2]], [p[0] - 4, 6, p[2] - 5], 1200);
+});
+
+document.getElementById('tips-close').addEventListener('click', function () {
+  document.getElementById('tips-drawer').classList.remove('open');
+});
+document.getElementById('btn-tips').addEventListener('click', function () {
+  closeInfo();
+  document.getElementById('tips-drawer').classList.toggle('open');
+});
+
+document.getElementById('btn-overview').addEventListener('click', function () { setPreset('overview'); });
+document.getElementById('btn-walk').addEventListener('click', function () { setPreset('walk'); });
+document.getElementById('btn-hub').addEventListener('click', function () { setPreset('hub'); });
+document.getElementById('btn-spitend').addEventListener('click', function () { setPreset('spitend'); });
+document.getElementById('btn-reset').addEventListener('click', function () { setPreset('reset'); });
+
+// Layer toggles
+document.getElementById('tog-paths').addEventListener('change', function (e) { gPaths.visible = e.target.checked; });
+document.getElementById('tog-buildings').addEventListener('change', function (e) { gBuildings.visible = e.target.checked; });
+document.getElementById('tog-hides').addEventListener('change', function (e) {
+  gHides.visible = e.target.checked;
+  gMarkers.visible = e.target.checked;
+});
+document.getElementById('tog-water').addEventListener('change', function (e) { gCreeks.visible = e.target.checked; });
+document.getElementById('tog-salt').addEventListener('change', function (e) { gSalt.visible = e.target.checked; });
+document.getElementById('tog-wildlife').addEventListener('change', function (e) {
+  gWildlife.visible = e.target.checked;
+  gBirds.visible = e.target.checked;
+});
+document.getElementById('tog-labels').addEventListener('change', function (e) { labelsVisible = e.target.checked; });
+
+// Mobile panel collapse
+var panel = document.getElementById('ui-panel');
+var btnToggle = document.getElementById('btn-panel-toggle');
+btnToggle.addEventListener('click', function () {
+  var collapsed = panel.classList.toggle('collapsed');
+  btnToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  btnToggle.textContent = collapsed ? 'Controls' : 'Hide';
+});
+// Start collapsed on narrow screens so map is visible
+if (window.matchMedia('(max-width: 720px)').matches) {
+  panel.classList.add('collapsed');
+  btnToggle.setAttribute('aria-expanded', 'false');
+  btnToggle.textContent = 'Controls';
+}
+
+// Hide hint after a while
+setTimeout(function () {
+  var h = document.getElementById('hint');
+  if (h) h.style.opacity = '0';
+}, 6000);
+
+// Resize
+function onResize() {
+  var w = wrap.clientWidth || window.innerWidth;
+  var h = wrap.clientHeight || (window.innerHeight - 48);
+  camera.aspect = w / Math.max(h, 1);
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+window.addEventListener('resize', onResize);
+onResize();
+
+// Animate
+var clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  var t = clock.getElapsedTime();
+  if (camAnim) camAnim(performance.now());
+  controls.update();
+
+  // Gentle water ripple
+  var pos = swaleMesh.geometry.attributes.position;
+  var base = swaleMesh.userData.baseY;
+  for (var i = 0; i < pos.count; i++) {
+    var x = pos.getX(i), z = pos.getZ(i);
+    pos.setY(i, base[i] + Math.sin(x * 0.35 + t * 0.8) * 0.04 + Math.cos(z * 0.28 + t * 0.6) * 0.03);
+  }
+  pos.needsUpdate = true;
+  matSwale.emissive = new THREE.Color(0x204050);
+  matSwale.emissiveIntensity = 0.04 + Math.sin(t * 0.5) * 0.02;
+
+  // Birds flock
+  if (gBirds.visible && gBirds.userData.mesh) {
+    var mesh = gBirds.userData.mesh;
+    var dummy = gBirds.userData.dummy;
+    var flock = mesh.userData.flock;
+    for (var bi = 0; bi < flock.length; bi++) {
+      var f = flock[bi];
+      var ang = f.phase + t * f.speed;
+      dummy.position.set(
+        f.x + Math.cos(ang) * f.radius,
+        f.y + Math.sin(ang * 2) * 0.25,
+        f.z + Math.sin(ang) * f.radius
+      );
+      dummy.lookAt(dummy.position.x + Math.cos(ang + 0.2), dummy.position.y, dummy.position.z + Math.sin(ang + 0.2));
+      dummy.updateMatrix();
+      mesh.setMatrixAt(bi, dummy.matrix);
+    }
+    mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  updateLabels();
+
+  // North indicator: arrow points to world +Z (north) relative to view
+  var northEl = document.getElementById('north-indicator');
+  if (northEl) {
+    var dx = controls.target.x - camera.position.x;
+    var dz = controls.target.z - camera.position.z;
+    var az = Math.atan2(dx, dz) * 180 / Math.PI;
+    northEl.style.transform = 'rotate(' + (-az) + 'deg)';
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+})();
+</script>
+</body>
+</html>

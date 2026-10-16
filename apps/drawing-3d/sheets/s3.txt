@@ -1,0 +1,86 @@
+                                                                                                                                                                                                                                                                                                                                                            GENERAL NOTES
+                                                                                                                                                                                                                                                                                                                                                            1. DO NOT SCALE FROM THIS DRAWING, TAKE FIGURED DIMENSIONS ONLY.
+                                                                                                                                                                                                                                                                                                                                                            2. DIMENSIONS ARE IN MILLIMETRES UNLESS NOTED OTHERWISE.
+                                                                                                                                                                                                                                                                                                                                                            3. UK POWER NETWORKS WILL NOT INSTALL ANY EQUIPMENT UNTIL ALL
+                                                                                                                                                                                                                                                                                                                                                                BUILDING WORKS ARE COMPLETED AND APPROVED.
+                                                                                                                                                                                                                                                                                                                                                            4. REFERENCE DOCUMENTS:
+                                                                                                                                                                                                                                                                                                                                                                · EAS 07-0000a APPROVED EQUIPMENT LIST - CIVIL.
+                                                                                                                                                                                                                                                                                                                                                                · EAS 07-0012 GRP GRATING FOR USE IN SUBSTATIONS.
+                                                                                                                                                                                                                                                                                                                                                            5. GRP GRATING SHALL BE CUT IN ACCORDANCE WITH THE
+                                                                                                                                                                                                                                                                                                                                                                MANUFACTURERS INSTRUCTIONS USING APPROVED TOOLS AND PPE.
+
+
+
+
+                                                                    CONCRETE BASE
+
+
+
+
+                                                                                                                                       1190
+                                                                   UA 65 x 50 x 6                                                                                                                          1                                                                                                         1
+
+
+             1                       1
+                                                                   RHS 100 x 50 x 6
+
+
+
+
+                                                                   UA 65 x 50 x 6                                                                                                                      1190                                                                                                         1190
+
+
+                                                                                                                                                                                                                                                         GRP PANELS
+
+
+            GENERAL ARRANGEMENT PLAN
+
+
+
+
+                                                                                                                          RHS 100 x 50 x 6
+
+                                  2590
+
+
+180   400        400        400          400       400                  180
+
+                                                                                                        UA 65 x 50 x 6
+
+                                                                                                        UA 65 x 50 x 6
+                                                                                                                                                              EDGE OF CONCRETE
+
+                            2360                                                                                                                                                                                                                         CUT GRP GRATING
+                                                                                                                                                                                                                                                         ALONG MAIN BARS ONLY                                                                                                       ORIGINAL                              TM       TM
+                                                                                                                                                                                                                                                                                                         CUT GRP GRATING               CUT LINE                  A       27-11-25                                         PW      UKPN
+                                                                                                                                                                                                                                                                                                     ALONG MAIN BARS ONLY
+                                                                                                                                                                                                                                                                                                                                                                                                                        Checked    Drn.
+                                                               14Ø x 28mm LONG                                                                                                                                                                           GRP GRATING SHORT BARS                                                                        69      Version     Date                Description
+                                                                                                                                                                                                                                                                                                                                                                                                                        Approved Designed
+                                                                                                                                                                                                                                                                                                 38mm GRP GRATING
+                                                               SLOTTED HOLES
+                       GALVANISED STEEL SUPPORTS
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                  38
+                                                                                                                                                                                                                                                         GRP GRATING MAIN BARS
+
+
+                                                                                                                                                   B                                                                                                        B                   GRP GRATING SHORT BARS                                    CABLES                TITLE
+
+                                                                                                                                                                                                                                                    69                                                                                                                     GRP ENCLOSURE FOR A
+                                                                                                                                                                                                                                                                                        GRP GRATING MAIN BARS
+                                                                                                                                                                                                                                                                                                                                                                       UNIT OR PADMOUNT SUBSTATION
+                                                                                                                                                                 CABLES                                                                69
+                                                                                                                                                                                               DETAIL A                                                                                                                     DETAIL B
+                                                                                                                                                                                                    PLAN VIEW                                                                                                                                                                 GRP FLOORING LAYOUT
+                                                                                                                                                                                                                                                                                                                                                                SCALE NTS                @A1                 APPROVED            Version
+                                                                                                                                                                                                                                     GRP CUT OUT FOR CABLE ENTRY                                                                                                DRAWING NO.
+
+                                                                                                                                                                                                                                                                                                                                                                EDS 07-3102_01 SHEET 3 OF 5                                        A
+                                                                                                                                                                                                                                                                                                                                                                SITE
+                                                                                                                                                                                                                                                                                                                                                                                    SECONDARY SUBSTATIONS
+                                                    This UK Power Networks drawing illustrates good practice regarding health, safety, security and cost efficiency. In all scenarios, locations and site specific designs are to be formally agreed with UK Power Networks prior to construction.
+
