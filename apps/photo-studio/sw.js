@@ -1,6 +1,6 @@
 /* Photo Studio service worker: cache-first for big, versioned assets (AI models, WASM, OpenCV, HEIC decoder) so repeat visits load instantly/offline.
    App code (html/js/css) stays network-first so updates always arrive. */
-const BIG='ps-assets-v1', APP='ps-app-v2'; // v2: develop tool bar tidy; app path works on GitHub Pages too
+const BIG='ps-assets-v1', APP='ps-app-v3'; // v3: Lightroom Classic develop skin; v2: develop tool bar tidy; app path works on GitHub Pages too
 const BIGRE=/\/photo-studio\/(models|ort|opencv|heif|mediapipe|libraw|leaflet)\/|\.(onnx|wasm|tflite|task)$|lensdb\.json$/;
 self.addEventListener('install',e=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil((async()=>{ const ks=await caches.keys(); await Promise.all(ks.filter(k=>k.startsWith('ps-')&&k!==BIG&&k!==APP).map(k=>caches.delete(k))); await self.clients.claim(); })()));

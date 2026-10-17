@@ -2,11 +2,12 @@
 (function(){
 const $id=id=>document.getElementById(id);
 const LEFT=['Presets','Snapshots','History'];
-const RIGHT=['Crop & Rotate','Spot Removal','Red-eye','Masks','Control Points',
- 'Colour Rendering','Basic','Selective Tone','Smart Lighting','Tone Curve',
- 'Colour Mixer','B&W Mixer','Point Color','Colour Wheel','Colour Grading',
- 'Detail','Lens & Transform','ViewPoint','Effects','Lens Blur','Film Emulation',
- 'Calibration','Metadata','✨ AI Assist'];
+const RIGHT=['Crop & Rotate','Spot Removal','Red-eye','Masks',
+ 'Basic','Tone Curve','Colour Mixer','Point Color','Colour Grading',
+ 'Detail','Lens & Transform','Lens Blur','Effects','Calibration',
+ // Photo Studio extras (not in Lightroom) follow the Lightroom panels
+ 'Colour Rendering','Selective Tone','Smart Lighting','B&W Mixer','Colour Wheel',
+ 'Control Points','ViewPoint','Film Emulation','✨ AI Assist','Metadata'];
 const title=d=>((d.querySelector('summary')||d).textContent||'').replace('↺','').trim();
 const rank=(list,t)=>{ const i=list.findIndex(n=>t.startsWith(n)); return i<0?999:i; };
 const wide=()=>matchMedia('(min-width:1100px) and (pointer:fine)').matches || matchMedia('(min-width:1180px)').matches;
