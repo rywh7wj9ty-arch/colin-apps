@@ -222,3 +222,4 @@ body.lrc #cch button{width:20px;height:20px;min-height:0;flex:none;border-radius
 body.lrc #cch button[data-c=r]{border-color:#e33}body.lrc #cch button[data-c=g]{border-color:#2c2}body.lrc #cch button[data-c=b]{border-color:#39f}
 body.lrc #cch button.on{box-shadow:0 0 0 2px #4f4f4f,0 0 0 3px #eee}
 @media (max-width:820px){ body.lrc #cch button{width:30px;height:30px;margin:7px 4px} }
+#lrcInfo{width:max-content}
