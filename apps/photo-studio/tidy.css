@@ -1,0 +1,77 @@
+/* ===== Develop tool bar tidy (tidy.js) ===== */
+body.dtOn #develop .vtools{display:none!important}
+body.dtOn .vtMore,body.dtOn #vtMore{display:none!important}
+#dtBar{display:flex;align-items:center;justify-content:center;gap:4px;padding:4px max(8px,env(safe-area-inset-right)) 4px max(8px,env(safe-area-inset-left));
+  background:#191919;border-top:1px solid #0a0a0a;min-height:52px;flex:none;user-select:none;-webkit-user-select:none}
+#dtBar .dtMain,#dtBar .dtUR{display:flex;align-items:center;gap:2px}
+#dtBar .dtUR{margin-left:6px;padding-left:6px;border-left:1px solid #2c2c2c}
+.dtB{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:#c9c9c9;font:inherit;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;min-width:44px;padding:0 7px;border-radius:10px;
+  font-size:12px;line-height:1;position:relative;-webkit-tap-highlight-color:transparent;transition:background .12s,color .12s}
+.dtB svg{flex:none;width:20px;height:20px}
+.dtB[hidden]{display:none!important}
+.dtB:hover{background:#262626;color:#fff}
+.dtB:active{background:#2f2f2f}
+.dtB:disabled{opacity:.32;cursor:default;background:transparent}
+.dtB.on{color:var(--acc,#6af);background:rgba(102,170,255,.12)}
+.dtB:focus-visible{outline:2px solid var(--acc,#6af);outline-offset:1px}
+.dtB.dtIcon{padding:0;width:44px}
+.dtB.dtIcon .dtL{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.dtB.dot::after{content:'';position:absolute;top:7px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--acc,#6af)}
+.dtMore.on{background:#2a2a2a;color:#fff}
+
+/* More sheet: popover on desktop */
+#dtSheet{position:fixed;z-index:60;width:min(360px,calc(100vw - 16px));background:#202020;border:1px solid #333;border-radius:14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);padding:10px;overflow:auto;overscroll-behavior:contain;opacity:0;transform:translateY(6px);transition:opacity .14s,transform .14s}
+#dtSheet.in{opacity:1;transform:none}
+#dtSheet[hidden]{display:none}
+#dtSheet .dtGrab{display:none}
+#dtSheet .dtHead{display:flex;align-items:center;justify-content:space-between;padding:0 2px 6px 6px;font-size:12px;color:#8a8a8a;text-transform:uppercase;letter-spacing:.06em}
+#dtSheet .dtX{appearance:none;border:0;background:transparent;color:#aaa;width:44px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+#dtSheet .dtX:hover{background:#2c2c2c;color:#fff}
+#dtSheet .dtX svg{width:18px;height:18px}
+#dtSheet .dtGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+#dtSheet .dtTile{flex-direction:column;gap:6px;min-height:68px;padding:8px 2px;font-size:11.5px;text-align:center;background:#262626;border-radius:12px}
+#dtSheet .dtTile:hover{background:#2e2e2e}
+#dtSheet .dtTile.on{background:rgba(102,170,255,.16)}
+#dtSheet .dtTile .dtL{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#dtSheet .mobOnly{display:none}
+#dtSheet .dtRow{display:flex;align-items:center;gap:10px;margin-top:8px;padding:8px 8px 4px;border-top:1px solid #2c2c2c;flex-wrap:wrap;min-height:44px}
+#dtSheet .dtRow[hidden]{display:none}
+#dtSheet .dtRL{font-size:12px;color:#8a8a8a;min-width:72px}
+#dtSheet #devStars{font-size:22px;letter-spacing:4px;margin:0;display:inline-flex;align-items:center;gap:2px}
+#dtSheet #devStars [data-r],#dtSheet #devStars .flag{display:inline-flex;align-items:center;justify-content:center;min-width:34px;min-height:44px;cursor:pointer}
+#dtSheet #proofSel{flex:1;min-width:0;max-width:none!important;min-height:40px;font-size:14px}
+#dtSheet #proofWarnL{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:13px}
+#dtSheet #proofWarnL[hidden]{display:none}
+#dtBack{position:fixed;inset:0;z-index:59;background:rgba(0,0,0,.35)}
+#dtBack[hidden]{display:none}
+
+/* iPhone / narrow: icon-over-label tools that share the width evenly; More becomes a bottom sheet */
+@media (max-width:820px){
+  #dtBar{justify-content:space-between;gap:0;min-height:56px;padding-top:3px;padding-bottom:3px}
+  #dtBar .dtMain{flex:1;justify-content:space-around;gap:0}
+  #dtBar .dtUR{margin-left:4px;padding-left:4px;gap:0}
+  #dtBar .deskOnly{display:none!important}
+  #dtBar .dtMain .dtB{flex-direction:column;gap:4px;flex:1 1 0;min-width:48px;max-width:76px;min-height:50px;padding:0 2px;font-size:10.5px;letter-spacing:.01em}
+  #dtBar .dtMain .dtB .dtL{white-space:nowrap}
+  #dtBar .dtB.dot::after{top:5px;right:calc(50% - 16px)}
+  #dtSheet{left:0!important;right:0;bottom:0!important;width:auto;max-height:78dvh;border-radius:18px 18px 0 0;border-width:1px 0 0;
+    padding:6px max(12px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));transform:translateY(24px)}
+  #dtSheet .dtGrab{display:block;width:38px;height:5px;border-radius:3px;background:#444;margin:4px auto 6px}
+  #dtSheet .mobOnly{display:inline-flex}
+  #dtSheet .mobOnly[hidden]{display:none}
+  #dtSheet .dtGrid{gap:6px}
+  #dtSheet .dtTile{min-height:72px}
+  /* the tool strip under the histogram duplicated Crop/Heal/Mask right below the new bar */
+  body.dtOn #lrStrip{display:none}
+}
+@media (max-width:340px){ #dtBar .dtMain .dtB{font-size:9.5px} }
+body.lights-dim #dtBar{opacity:.18;transition:opacity .25s} body.lights-dim #dtBar:hover{opacity:1}
+body.lights-out #dtBar{opacity:0;pointer-events:none}
+
+/* desktop window too narrow for labels: icons only (tooltips keep the names) */
+@media (min-width:821px){ #dtBar.dtTight .dtB.deskOnly .dtL{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} #dtBar.dtTight .dtB.deskOnly{padding:0;width:44px}
+  #dtBar.dtCompact .dtB .dtL{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} #dtBar.dtCompact .dtB{padding:0;width:44px} }
+#dtSheet #devStars{color:#d6d6d6}
+#dtSheet #devStars .on,#dtSheet #devStars [data-r].on{color:#f5c542}

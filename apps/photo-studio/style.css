@@ -704,7 +704,8 @@ html.standalone #a2hs .a2Done{display:block}
 #lpanel{width:230px;flex:none;background:var(--panel);border-right:1px solid #000;overflow-y:auto;padding-bottom:30px}
 #lpanel[hidden]{display:none}
 #lpanel .lpHead{font-size:11px;color:var(--dim,#999);padding:8px 10px;text-transform:uppercase;letter-spacing:.05em}
-#lpNav #navBox{position:static!important;display:block;margin:0 auto 8px;inset:auto!important}
+#lpNav{position:relative}
+#lpNav #navBox{position:relative!important;display:block;margin:0 auto 8px;inset:auto!important;width:max-content}
 #lrStrip{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid #000}
 #lrStrip .btn{flex:1;min-width:0;padding:6px 2px;font-size:12px;white-space:nowrap}
 #lrStrip .btn.on{background:var(--accent,#3d7be0);color:#fff}

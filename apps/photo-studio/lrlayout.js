@@ -12,7 +12,7 @@ const rank=(list,t)=>{ const i=list.findIndex(n=>t.startsWith(n)); return i<0?99
 const wide=()=>matchMedia('(min-width:1100px) and (pointer:fine)').matches || matchMedia('(min-width:1180px)').matches;
 let busy=false;
 function lpanel(){ let lp=$id('lpanel'); if(!lp){ lp=document.createElement('aside'); lp.id='lpanel';
-  lp.innerHTML='<div class="lpHead">Navigator · Presets · Snapshots · History</div><div id="lpNav"></div><div id="lpSecs"></div>';
+  lp.innerHTML='<div class="lpHead">Navigator</div><div id="lpNav"></div><div id="lpSecs"></div>';
   const dev=$id('develop'); dev.insertBefore(lp,dev.firstChild); } return lp; }
 function arrange(){ const secs=$id('sections'); if(!secs||busy) return; busy=true;
  try{
@@ -57,7 +57,7 @@ function holdPreview(){ const st=$id('stage'); if(!st||st._lrHold) return; st._l
  st.addEventListener('pointermove',e=>{ if(e.pointerId!==pid||!tm) return; if(Math.hypot(e.clientX-sx,e.clientY-sy)>8){ clearTimeout(tm); tm=null; } },true);
  const up=e=>{ pts.delete(e.pointerId); if(e.pointerId===pid||pts.size===0) end(); };
  ['pointerup','pointercancel','lostpointercapture'].forEach(t=>st.addEventListener(t,up,true));
- st.addEventListener('pointerleave',e=>{ if(e.pointerType==='mouse') up(e); },true);
+ st.addEventListener('pointerleave',e=>{ if(e.target===st&&e.pointerType==='mouse') up(e); });
  addEventListener('blur',()=>{ pts.clear(); end(); });
  st.addEventListener('contextmenu',e=>{ if(held||tm) e.preventDefault(); });
  window.__lrHold={isHeld:()=>held};
