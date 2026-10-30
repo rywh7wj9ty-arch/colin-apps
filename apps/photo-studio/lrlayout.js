@@ -10,7 +10,7 @@ const RIGHT=['Crop & Rotate','Spot Removal','Red-eye','Masks',
  'Control Points','ViewPoint','Film Emulation','✨ AI Assist','Metadata'];
 const title=d=>((d.querySelector('summary')||d).textContent||'').replace('↺','').trim();
 const rank=(list,t)=>{ const i=list.findIndex(n=>t.startsWith(n)); return i<0?999:i; };
-const wide=()=>matchMedia('(min-width:1100px) and (pointer:fine)').matches || matchMedia('(min-width:1180px)').matches;
+const wide=()=>matchMedia('(min-width:1000px)').matches;
 let busy=false;
 function lpanel(){ let lp=$id('lpanel'); if(!lp){ lp=document.createElement('aside'); lp.id='lpanel';
   lp.innerHTML='<div class="lpHead">Navigator</div><div id="lpNav"></div><div id="lpSecs"></div>';

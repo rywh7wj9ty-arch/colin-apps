@@ -242,8 +242,14 @@ function frame(){
     if(zoom&&!cropOn){ const V=zoomView(); let st=engine.state; if(V.need>engine.state.scale*1.1){ const t=tileFor(V); if(t) st=t; }
       engine.render(vs,{st,size:V.size,view:V.view,ovMask:ov}); gl.style.width=V.css[0]+'px'; gl.style.height=V.css[1]+'px';
       $('#zoomInfo').textContent = st===engine.state && V.need>engine.state.scale*1.1 ? 'Rendering full resolution…' : (st!==engine.state?'Full resolution':''); }
-    else { engine.render(vs,{fullFrame:cropOn,ovMask:ov}); gl.style.width=''; gl.style.height=''; $('#zoomInfo').textContent=''; }
-    const now=performance.now(); if(now-histT>120){ histT=now; drawHisto(engine.histogram(vs,{fullFrame:cropOn})); } else schedule();
+    else { const D=window.__psDrag; let k=1;
+      if(D&&D.on&&!cropOn){ const os=Engine.outSize(engine.state,vs), r=D.rect||(D.rect=gl.getBoundingClientRect()); if(r.width>0&&os.w>0) k=Math.min(1,Math.max(0.25,r.width*Math.min(devicePixelRatio||1,1.5)/os.w));
+        if(k<0.95){ gl.style.width=r.width+'px'; gl.style.height=r.height+'px'; engine.render(vs,{fullFrame:false,ovMask:ov,size:[Math.max(1,Math.round(os.w*k)),Math.max(1,Math.round(os.h*k))]}); D.proxy=true; } else k=1; }
+      if(k===1){ engine.render(vs,{fullFrame:cropOn,ovMask:ov}); gl.style.width=''; gl.style.height=''; if(D) D.proxy=false; }
+      $('#zoomInfo').textContent=''; }
+    /* histogram = full re-render + GPU readback: never during a drag; once, shortly after the image settles */
+    clearTimeout(window.__histTimer); const dragging=window.__psDrag&&window.__psDrag.on;
+    if(!dragging) window.__histTimer=setTimeout(()=>{ try{ if(!S||!engine.state||mode!=='develop'||(window.__psDrag&&window.__psDrag.on)) return; histT=performance.now(); drawHisto(engine.histogram(viewSettings(),{fullFrame:cropOn})); }catch(e){ console.error(e); } }, histT===0?0:160);
     if(cropOn) layoutCrop(); drawOverlay();
   }catch(e){ console.error(e); }
 }

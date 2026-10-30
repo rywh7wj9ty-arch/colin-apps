@@ -14,7 +14,7 @@ addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ try{
     if(!on){ if(!h.hidden) h.hidden=true; return; } h.hidden=false;
     const s=pend!=null?pend:st.split, x=r[0]+r[2]*s; h.style.left=x+'px'; h.style.top=r[1]+'px'; h.style.height=r[3]+'px';
     h.setAttribute('aria-valuenow',Math.round(s*100)); h.classList.toggle('hideL',s<0.12); h.classList.toggle('hideR',s>0.88); };
-  (function loop(){ place(); requestAnimationFrame(loop); })();
+  (function loop(){ place(); if(__cmpState().mode==='split'||dragging) requestAnimationFrame(loop); else setTimeout(()=>requestAnimationFrame(loop),250); })();
   const at=e=>{ const r=__cmpRect(); if(!r) return 0.5; const bb=stage.getBoundingClientRect(); return Math.min(1,Math.max(0,(e.clientX-bb.left-r[0])/r[2])); };
   const push=v=>{ pend=v; place(); if(!raf) raf=requestAnimationFrame(()=>{ raf=0; if(pend!=null) __setSplit(pend); if(!dragging) pend=null; }); };
   h.addEventListener('pointerdown',e=>{ if(!e.target.closest('.baGrip,.baLine')&&e.target!==h) return; dragging=true; h.classList.add('drag'); try{h.setPointerCapture(e.pointerId);}catch(_){} push(at(e)); e.preventDefault(); e.stopPropagation(); });
