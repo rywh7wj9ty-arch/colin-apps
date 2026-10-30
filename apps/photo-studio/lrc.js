@@ -87,7 +87,10 @@ function right(){
  if(!$id('lrcTools')){ const t=document.createElement('div'); t.id='lrcTools'; t.setAttribute('role','toolbar'); t.setAttribute('aria-label','Develop tools');
   TOOLS.forEach(([k,lab,id])=>{ const b=document.createElement('button'); b.type='button'; b.dataset.t=k; b.title=lab; b.setAttribute('aria-label',lab); b.innerHTML=IC[k]+'<i class="dot"></i>';
    b.onclick=()=>pickTool(k); t.appendChild(b); });
-  h.after(t); }
+  h.after(t);
+  // keep the icon row in step when a tool is turned on/off elsewhere (tidy bar, M key, Esc, More sheet)
+  try{ const mo=new MutationObserver(()=>{ clearTimeout(window.__lrcToolT); window.__lrcToolT=setTimeout(upd,0); });
+   ['cropBtn','healBtn','maskBtn','reToolBtn','autoSyncBtn'].forEach(id=>{ const r=$id(id); if(r) mo.observe(r,{attributes:true,attributeFilter:['class']}); }); }catch(e){} }
  // Previous / Reset footer
  if(!$id('lrcFoot')){ const f=document.createElement('div'); f.id='lrcFoot';
   f.innerHTML='<button id="lrcPrev" title="Apply settings from the previous photo (Ctrl+Alt+V)">Previous</button><button id="lrcReset" title="Reset all settings">Reset</button>';

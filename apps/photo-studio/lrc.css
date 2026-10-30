@@ -247,3 +247,13 @@ body.lrc .sl label,body.lrc input[type=number]{font-variant-numeric:tabular-nums
   body.lrc #stage{padding:6px;padding-left:max(6px,env(safe-area-inset-left))}
 }
 @media (min-width:1000px) and (max-width:1179px){ body.lrc #lpanel{width:180px} body.lrc #panel{width:270px} }
+
+/* Mask-stays-on fix: on touch screens :hover sticks after a tap, so an off tool looked identical to an on one.
+   Only show hover on real pointers, and give the on state an unmistakable accent + underline. */
+@media (hover:none),(pointer:coarse){
+ .dtB:hover,body.lrc .dtB:hover{background:transparent;color:inherit}
+ #lrcTools button:hover{background:transparent;color:inherit}
+ .dtB:not(.on):active,#lrcTools button:not(.on):active{background:rgba(255,255,255,.06)}
+}
+body.lrc .dtB.on,.dtB.on{color:var(--acc,#6af);background:rgba(102,170,255,.16);box-shadow:inset 0 -2px 0 var(--acc,#6af)}
+body.lrc .dtB:not(.on):focus:not(:focus-visible){background:transparent}

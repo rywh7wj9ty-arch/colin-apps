@@ -1,6 +1,6 @@
 /* Photo Studio service worker: cache-first for big, versioned assets (AI models, WASM, OpenCV, HEIC decoder) so repeat visits load instantly/offline.
    App code (html/js/css) stays network-first so updates always arrive. */
-const BIG='ps-assets-v1', APP='ps-app-v4'; // v4: responsiveness pass + app-shell precache; v3: Lightroom Classic develop skin; v2: develop tool bar tidy; app path works on GitHub Pages too
+const BIG='ps-assets-v1', APP='ps-app-v5'; // v5: mask/tool toggle visibly turns off on touch; v4: responsiveness pass + app-shell precache; v3: Lightroom Classic develop skin; v2: develop tool bar tidy; app path works on GitHub Pages too
 const BIGRE=/\/photo-studio\/(models|ort|opencv|heif|mediapipe|libraw|leaflet)\/|\.(onnx|wasm|tflite|task)$|lensdb\.json$/;
 const SHELL=['./','index.html','style.css','tidy.css','lrc.css','manifest.webmanifest','icon-192.png','engine.js','tools.js','app.js','rawctl.js','interact.js','features.js','pro.js','ai.js','ai2.js','lib.js','dxo.js','dxo2.js','dxo3.js','dn.js','lr.js','lr2.js','lr3.js','lr4.js','lr5.js','lr6.js','lr7.js','autotag.js','libui.js','slreset.js','lr8.js','lr9.js','lr10.js','lr11.js','lr12.js','lr13.js','lr14.js','heic.js','pwa.js','cvtools.js','ai3.js','nr2.js','ba.js','lrlayout.js','tidy.js','lrc.js','perf.js','raw.js'];
 self.addEventListener('install',e=>{ self.skipWaiting(); e.waitUntil(caches.open(APP).then(c=>Promise.all(SHELL.map(u=>c.add(new Request(u,{cache:'reload'})).catch(()=>{}))))); });
